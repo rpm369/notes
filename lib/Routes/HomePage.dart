@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:notes/Components/NotesTile.dart';
+import 'package:notes/Databases/NotesDB.dart';
+import 'package:notes/Models/Note.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
   State<HomePage> createState() => _HomePageState();
 }
 
@@ -19,16 +19,24 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildBody() {
-    return GridView.builder(
-      padding: EdgeInsets.all(5),
-      itemCount: 10,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 20,
-        childAspectRatio: 0.7,
-      ),
-      itemBuilder: (context, index) {
-        return NotesTile();
+    return Selector<NotesDB, int>(
+      builder: (context, notesSize, child) {
+        return GridView.builder(
+          padding: EdgeInsets.all(5),
+          itemCount: notesSize,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 20,
+            childAspectRatio: 0.7,
+          ),
+          itemBuilder: (context, index) {
+            Note note = context.read<NotesDB>().getAllNotes()[index];
+            return NotesTile(key: ValueKey(note), note: note);
+          },
+        );
+      },
+      selector: (context, db) {
+        return db.getDbSize();
       },
     );
   }
@@ -54,7 +62,9 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildAddButton() {
     return IconButton(
-      onPressed: () {},
+      onPressed: () {
+        Navigator.pushNamed(context, '/new');
+      },
       icon: Icon(Icons.add, color: Colors.white, size: 40),
     );
   }

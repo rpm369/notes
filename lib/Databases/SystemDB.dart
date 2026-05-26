@@ -11,7 +11,7 @@ class SystemDB {
 
   static Future<bool> isFirstExecution() async {
     if (db == null) await initializeDB();
-    bool isFirstTime = await db!.getBool(Constants.FIRST_TIME.value) ?? true;
+    bool isFirstTime = db!.getBool(Constants.FIRST_TIME.value) ?? true;
 
     if (isFirstTime) {
       await db!.setBool(Constants.FIRST_TIME.value, false);

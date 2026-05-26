@@ -1,18 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:notes/Databases/NotesDB.dart';
+import 'package:notes/Models/Note.dart';
+import 'package:provider/provider.dart';
 
 class NoteViewPage extends StatefulWidget {
-  bool isForNewCreation;
-  TextEditingController contentController;
-  TextEditingController titleController;
+  Note? note;
 
-  NoteViewPage({this.isForNewCreation = true})
-    : contentController = TextEditingController(),
-      titleController = TextEditingController(text: "Notes");
+  NoteViewPage({this.note});
 
   State<NoteViewPage> createState() => _NoteViewPageState();
 }
 
 class _NoteViewPageState extends State<NoteViewPage> {
+  late TextEditingController contentController;
+  late TextEditingController titleController;
+  late FocusNode node;
+
+  void initState() {
+    String preContent = widget.note?.content ?? "";
+    contentController = new TextEditingController(text: preContent);
+
+    String preTitle = widget.note?.title ?? "Title";
+    titleController = new TextEditingController(text: preTitle);
+    node = new FocusNode();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      node.requestFocus();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,8 +42,9 @@ class _NoteViewPageState extends State<NoteViewPage> {
     return SafeArea(
       child: TextField(
         maxLines: 1000000,
+        focusNode: node,
         style: TextStyle(color: Colors.white, fontSize: 16),
-        controller: widget.contentController,
+        controller: contentController,
         cursorColor: Colors.white,
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
@@ -42,7 +59,9 @@ class _NoteViewPageState extends State<NoteViewPage> {
     return AppBar(
       leadingWidth: 45,
       leading: IconButton(
-        onPressed: () {},
+        onPressed: () async {
+          await leadingButtonFunction();
+        },
         icon: Icon(
           Icons.arrow_back_ios_new_sharp,
           color: Colors.white,
@@ -51,7 +70,7 @@ class _NoteViewPageState extends State<NoteViewPage> {
       ),
       actionsPadding: EdgeInsets.only(right: 10),
       actions: [
-        if (!widget.isForNewCreation) _buildDeleteButton(),
+        if (widget.note != null) _buildDeleteButton(),
         _buildExportButton(),
       ],
       backgroundColor: Colors.black,
@@ -60,9 +79,41 @@ class _NoteViewPageState extends State<NoteViewPage> {
     );
   }
 
+  Future<void> leadingButtonFunction() async {
+    String titlecontrollerText = titleController.text;
+    String contentControllerText = contentController.text;
+    bool needToRebuildParent = false;
+
+    if (widget.note == null) {
+      if (contentController.text.isNotEmpty) {
+        String title = (titlecontrollerText.isNotEmpty)
+            ? titleController.text
+            : "No Title";
+
+        await context.read<NotesDB>().addNewNote(
+          Note(title, contentController.text),
+        );
+      }
+    } else {
+      if (widget.note!.title != titlecontrollerText ||
+          widget.note!.content != contentControllerText) {
+        widget.note!.title = titlecontrollerText;
+        widget.note!.content = contentControllerText;
+
+        await widget.note!.save();
+        needToRebuildParent = true;
+      }
+    }
+
+    Navigator.pop(context, (widget.note != null && needToRebuildParent));
+  }
+
   Widget _buildDeleteButton() {
     return IconButton(
-      onPressed: () {},
+      onPressed: () async {
+        await context.read<NotesDB>().deleteNote(widget.note!);
+        Navigator.pop(context, false);
+      },
       icon: Icon(Icons.delete, size: 28, color: Colors.white),
     );
   }
@@ -77,7 +128,7 @@ class _NoteViewPageState extends State<NoteViewPage> {
   Widget _buildAppBarText() {
     return TextField(
       cursorColor: Colors.white,
-      controller: widget.titleController,
+      controller: titleController,
       style: TextStyle(
         color: Colors.white,
         fontSize: 28,
@@ -95,9 +146,3 @@ class _NoteViewPageState extends State<NoteViewPage> {
     );
   }
 }
-
-String sum =
-    """Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-
-Section 1.10.32 of "de Finibus Bonorum et Malorum", written by Cicero in 45 BC
-"Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?""";
