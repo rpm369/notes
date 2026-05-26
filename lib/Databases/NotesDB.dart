@@ -4,7 +4,7 @@ import 'package:notes/Databases/Constants.dart';
 import 'package:notes/Databases/SystemDB.dart';
 import 'package:notes/Models/Note.dart';
 
-class NotesDB extends ChangeNotifier {
+class NotesDB {
   NotesDB._();
 
   static Box<Note>? _db;

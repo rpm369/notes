@@ -17,7 +17,7 @@ void main() async {
   await SystemDB.initializeDB();
   NotesDB notesDb = await NotesDB.initialize();
 
-  runApp(ChangeNotifierProvider(create: (context) => notesDb, child: MyApp()));
+  runApp(Provider(create: (context) => notesDb, child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {

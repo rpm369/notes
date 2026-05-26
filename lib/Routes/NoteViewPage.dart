@@ -105,7 +105,7 @@ class _NoteViewPageState extends State<NoteViewPage> {
       }
     }
 
-    Navigator.pop(context, (widget.note != null && needToRebuildParent));
+    Navigator.pop(context);
   }
 
   Widget _buildDeleteButton() {

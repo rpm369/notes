@@ -19,17 +19,7 @@ class _NotesTileState extends State<NotesTile> {
       children: [
         GestureDetector(
           onTap: () async {
-            bool needToRebuild =
-                await Navigator.pushNamed(
-                      context,
-                      '/edit',
-                      arguments: widget.note,
-                    )
-                    as bool;
-
-            if (needToRebuild) {
-              setState(() {});
-            }
+            await Navigator.pushNamed(context, '/edit', arguments: widget.note);
           },
           child: _buildTile(),
         ),

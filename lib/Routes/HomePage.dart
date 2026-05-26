@@ -19,24 +19,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildBody() {
-    return Selector<NotesDB, int>(
-      builder: (context, notesSize, child) {
-        return GridView.builder(
-          padding: EdgeInsets.all(5),
-          itemCount: notesSize,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 20,
-            childAspectRatio: 0.7,
-          ),
-          itemBuilder: (context, index) {
-            Note note = context.read<NotesDB>().getAllNotes()[index];
-            return NotesTile(key: ValueKey(note), note: note);
-          },
-        );
-      },
-      selector: (context, db) {
-        return db.getDbSize();
+    return GridView.builder(
+      padding: EdgeInsets.all(5),
+      itemCount: context.read<NotesDB>().getDbSize(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 20,
+        childAspectRatio: 0.7,
+      ),
+      itemBuilder: (context, index) {
+        Note note = context.read<NotesDB>().getAllNotes()[index];
+        return NotesTile(key: ValueKey(note), note: note);
       },
     );
   }
