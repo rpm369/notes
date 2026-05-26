@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:notes/Databases/NotesDB.dart';
 import 'package:notes/Models/Note.dart';
+import 'package:notes/Services/DocumentSaver.dart';
 import 'package:provider/provider.dart';
 
 class NoteViewPage extends StatefulWidget {
@@ -120,8 +121,31 @@ class _NoteViewPageState extends State<NoteViewPage> {
 
   Widget _buildExportButton() {
     return IconButton(
-      onPressed: () {},
+      onPressed: () async {
+        if (contentController.text.isEmpty) {
+          _showSnackBar(content: "No content to store");
+          return;
+        }
+        await DocumentSaver.saveNote(
+          Note(titleController.text, contentController.text),
+        );
+        _showSnackBar(content: "File Saved !");
+      },
       icon: Icon(Icons.sim_card_download_sharp, color: Colors.white, size: 28),
+    );
+  }
+
+  void _showSnackBar({required String content}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.white,
+        content: Text(
+          content,
+          style: TextStyle(color: Colors.black, fontSize: 15),
+        ),
+        padding: EdgeInsets.all(6),
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 
