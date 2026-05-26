@@ -1,12 +1,13 @@
+import 'package:hive/hive.dart';
+
+part 'Note.g.dart';
+
+@HiveType(typeId: 0)
 class Note {
-  String? _title;
-  late String _content;
+  @HiveField(0)
+  String? title;
+  @HiveField(1)
+  late String content;
 
-  Note({this._title, required this._content});
-
-  set title(String newTitle) => this._title = newTitle;
-  set content(String newContent) => this._content = newContent;
-
-  String? get title => this._title;
-  String get content => this._content;
+  Note(this.title, this.content);
 }
