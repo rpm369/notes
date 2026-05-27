@@ -5,7 +5,7 @@ import 'package:notes/Models/Note.dart';
 import 'package:path_provider/path_provider.dart';
 
 class DocumentSaver {
-  static Future<String> saveNote(Note note) async {
+  static Future<bool> saveNote(Note note) async {
     Directory tempDir = await getTemporaryDirectory();
 
     if (note.title!.isEmpty) note.title = "NoTitle";
@@ -16,6 +16,6 @@ class DocumentSaver {
     final params = SaveFileDialogParams(sourceFilePath: tempFile.path);
     final filePath = await FlutterFileDialog.saveFile(params: params);
 
-    return filePath ?? "Saving Canceled";
+    return (filePath == null) ? false : true;
   }
 }

@@ -23,10 +23,7 @@ class _NotesTileState extends State<NotesTile> {
           },
           child: _buildTile(),
         ),
-        Text(
-          widget.note.title ?? "TextNote",
-          style: TextStyle(color: Colors.white, fontSize: 15),
-        ),
+        Text(widget.note.title ?? "TextNote", style: TextStyle(fontSize: 15)),
       ],
     );
   }
@@ -37,12 +34,12 @@ class _NotesTileState extends State<NotesTile> {
       width: 150,
       padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.grey.shade900,
+        color: Theme.of(context).colorScheme.primary,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
         widget.note.content,
-        style: TextStyle(color: Colors.white, overflow: TextOverflow.fade),
+        style: TextStyle(overflow: TextOverflow.fade),
       ),
     );
   }

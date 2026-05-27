@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:notes/Components/NotesTile.dart';
 import 'package:notes/Databases/NotesDB.dart';
+import 'package:notes/Databases/SystemDB.dart';
 import 'package:notes/Models/Note.dart';
 import 'package:provider/provider.dart';
 
@@ -12,7 +13,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: _buildAppBar(),
       body: _buildBody(),
     );
@@ -37,20 +38,38 @@ class _HomePageState extends State<HomePage> {
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       actionsPadding: EdgeInsets.only(right: 5),
+      leading: _buildLeadingButton(),
       actions: [_buildAddButton()],
       centerTitle: true,
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       toolbarHeight: 80,
       title: Text(
         "NOTES",
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 40,
-          letterSpacing: 2,
-          fontFamily: "Beyno",
+        style: TextStyle(fontSize: 40, letterSpacing: 2, fontFamily: "Beyno"),
+      ),
+    );
+  }
+
+  Widget _buildLeadingButton() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 5),
+      child: IconButton(
+        onPressed: () {
+          context.read<SystemDB>().alterTheme();
+        },
+        icon: Icon(
+          _getIcon(),
+          color: Theme.of(context).colorScheme.onSurface,
+          size: 40,
         ),
       ),
     );
+  }
+
+  IconData _getIcon() {
+    return (Theme.of(context).brightness == Brightness.dark)
+        ? Icons.dark_mode_sharp
+        : Icons.light_mode;
   }
 
   Widget _buildAddButton() {
@@ -58,7 +77,11 @@ class _HomePageState extends State<HomePage> {
       onPressed: () {
         Navigator.pushNamed(context, '/new');
       },
-      icon: Icon(Icons.add, color: Colors.white, size: 40),
+      icon: Icon(
+        Icons.add,
+        color: Theme.of(context).colorScheme.onSurface,
+        size: 40,
+      ),
     );
   }
 }

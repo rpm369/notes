@@ -33,7 +33,7 @@ class _NoteViewPageState extends State<NoteViewPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: _buildAppBar(),
       body: _buildBody(),
     );
@@ -42,11 +42,12 @@ class _NoteViewPageState extends State<NoteViewPage> {
   Widget _buildBody() {
     return SafeArea(
       child: TextField(
-        maxLines: 1000000,
+        maxLines: null,
+        keyboardType: TextInputType.multiline,
         focusNode: node,
-        style: TextStyle(color: Colors.white, fontSize: 16),
+        style: TextStyle(fontSize: 16),
         controller: contentController,
-        cursorColor: Colors.white,
+        cursorColor: Theme.of(context).colorScheme.onSurface,
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
           enabledBorder: InputBorder.none,
@@ -65,7 +66,7 @@ class _NoteViewPageState extends State<NoteViewPage> {
         },
         icon: Icon(
           Icons.arrow_back_ios_new_sharp,
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.onSurface,
           size: 25,
         ),
       ),
@@ -74,7 +75,7 @@ class _NoteViewPageState extends State<NoteViewPage> {
         if (widget.note != null) _buildDeleteButton(),
         _buildExportButton(),
       ],
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       toolbarHeight: 50,
       title: _buildAppBarText(),
     );
@@ -83,7 +84,6 @@ class _NoteViewPageState extends State<NoteViewPage> {
   Future<void> leadingButtonFunction() async {
     String titlecontrollerText = titleController.text;
     String contentControllerText = contentController.text;
-    bool needToRebuildParent = false;
 
     if (widget.note == null) {
       if (contentController.text.isNotEmpty) {
@@ -102,7 +102,6 @@ class _NoteViewPageState extends State<NoteViewPage> {
         widget.note!.content = contentControllerText;
 
         await widget.note!.save();
-        needToRebuildParent = true;
       }
     }
 
@@ -115,7 +114,11 @@ class _NoteViewPageState extends State<NoteViewPage> {
         await context.read<NotesDB>().deleteNote(widget.note!);
         Navigator.pop(context, false);
       },
-      icon: Icon(Icons.delete, size: 28, color: Colors.white),
+      icon: Icon(
+        Icons.delete,
+        size: 28,
+        color: Theme.of(context).colorScheme.onSurface,
+      ),
     );
   }
 
@@ -126,23 +129,25 @@ class _NoteViewPageState extends State<NoteViewPage> {
           _showSnackBar(content: "No content to store");
           return;
         }
-        await DocumentSaver.saveNote(
+
+        bool status = await DocumentSaver.saveNote(
           Note(titleController.text, contentController.text),
         );
-        _showSnackBar(content: "File Saved !");
+        _showSnackBar(content: (status) ? "File Saved !" : "File not Saved !");
       },
-      icon: Icon(Icons.sim_card_download_sharp, color: Colors.white, size: 28),
+      icon: Icon(
+        Icons.sim_card_download_sharp,
+        color: Theme.of(context).colorScheme.onSurface,
+        size: 28,
+      ),
     );
   }
 
   void _showSnackBar({required String content}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: Colors.white,
-        content: Text(
-          content,
-          style: TextStyle(color: Colors.black, fontSize: 15),
-        ),
+        backgroundColor: Theme.of(context).colorScheme.onSurface,
+        content: Text(content, style: TextStyle(fontSize: 15)),
         padding: EdgeInsets.all(6),
         duration: Duration(seconds: 2),
       ),
@@ -151,14 +156,9 @@ class _NoteViewPageState extends State<NoteViewPage> {
 
   Widget _buildAppBarText() {
     return TextField(
-      cursorColor: Colors.white,
+      cursorColor: Theme.of(context).colorScheme.onSurface,
       controller: titleController,
-      style: TextStyle(
-        color: Colors.white,
-        fontSize: 28,
-        letterSpacing: 2,
-        fontFamily: "Beyno",
-      ),
+      style: TextStyle(fontSize: 28, letterSpacing: 2, fontFamily: "Beyno"),
       maxLines: 1,
       maxLength: 20,
       textAlignVertical: TextAlignVertical.center,
