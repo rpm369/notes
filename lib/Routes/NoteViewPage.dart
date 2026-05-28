@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:notes/Databases/NotesDB.dart';
 import 'package:notes/Models/Note.dart';
-import 'package:notes/Services/DocumentSaver.dart';
+import 'package:notes/Services/NoteViewPageService.dart';
 import 'package:provider/provider.dart';
 
 class NoteViewPage extends StatefulWidget {
@@ -32,10 +32,21 @@ class _NoteViewPageState extends State<NoteViewPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: _buildAppBar(),
-      body: _buildBody(),
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) async {
+        await NoteViewPageService.saveAndExit(
+          context: context,
+          note: widget.note,
+          titlecontrollerText: titleController.text,
+          contentControllerText: contentController.text,
+        );
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        appBar: _buildAppBar(),
+        body: _buildBody(),
+      ),
     );
   }
 
@@ -61,8 +72,8 @@ class _NoteViewPageState extends State<NoteViewPage> {
     return AppBar(
       leadingWidth: 45,
       leading: IconButton(
-        onPressed: () async {
-          await leadingButtonFunction();
+        onPressed: () {
+          Navigator.pop(context);
         },
         icon: Icon(
           Icons.arrow_back_ios_new_sharp,
@@ -79,33 +90,6 @@ class _NoteViewPageState extends State<NoteViewPage> {
       toolbarHeight: 50,
       title: _buildAppBarText(),
     );
-  }
-
-  Future<void> leadingButtonFunction() async {
-    String titlecontrollerText = titleController.text;
-    String contentControllerText = contentController.text;
-
-    if (widget.note == null) {
-      if (contentController.text.isNotEmpty) {
-        String title = (titlecontrollerText.isNotEmpty)
-            ? titleController.text
-            : "No Title";
-
-        await context.read<NotesDB>().addNewNote(
-          Note(title, contentController.text),
-        );
-      }
-    } else {
-      if (widget.note!.title != titlecontrollerText ||
-          widget.note!.content != contentControllerText) {
-        widget.note!.title = titlecontrollerText;
-        widget.note!.content = contentControllerText;
-
-        await widget.note!.save();
-      }
-    }
-
-    Navigator.pop(context);
   }
 
   Widget _buildDeleteButton() {
@@ -130,7 +114,7 @@ class _NoteViewPageState extends State<NoteViewPage> {
           return;
         }
 
-        bool status = await DocumentSaver.saveNote(
+        bool status = await NoteViewPageService.saveNote(
           Note(titleController.text, contentController.text),
         );
         _showSnackBar(content: (status) ? "File Saved !" : "File not Saved !");
