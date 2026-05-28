@@ -6,3 +6,13 @@ enum Constants {
   final String value;
   const Constants(this.value);
 }
+
+enum NotesDBConst {
+  TABLE_NAME("Note"),
+  ID("id"),
+  TITLE("title"),
+  CONTENT("content");
+
+  final String value;
+  const NotesDBConst(this.value);
+}

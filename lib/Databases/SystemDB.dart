@@ -17,18 +17,9 @@ class SystemDB extends ChangeNotifier {
   static Future<void> _configureIfFirstTime() async {
     bool? isFirstTime = db!.getBool(Constants.FIRST_TIME.value);
     if (isFirstTime == null) {
-      await db!.setBool(Constants.FIRST_TIME.value, true);
+      await db!.setBool(Constants.FIRST_TIME.value, false);
       await db!.setBool(Constants.IS_THEME_DARK.value, true);
     }
-  }
-
-  static Future<bool> isFirstExecution() async {
-    if (db == null) await initializeDB();
-
-    bool isFirstTime = db!.getBool(Constants.FIRST_TIME.value)!;
-    if (isFirstTime) db!.setBool(Constants.FIRST_TIME.value, false);
-
-    return isFirstTime;
   }
 
   bool isThemeDark() {

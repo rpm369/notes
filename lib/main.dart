@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/adapters.dart';
 import 'package:notes/Databases/NotesDB.dart';
 import 'package:notes/Databases/SystemDB.dart';
 import 'package:notes/Models/Note.dart';
@@ -12,11 +11,9 @@ import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
-  Hive.registerAdapter(NoteAdapter());
 
   SystemDB systemDB = await SystemDB.initializeDB();
-  NotesDB notesDb = await NotesDB.initialize();
+  NotesDB notesDb = await NotesDB.getDatabase();
 
   runApp(
     MultiProvider(

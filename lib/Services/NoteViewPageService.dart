@@ -35,7 +35,7 @@ class NoteViewPageService {
             : "No Title";
 
         await context.read<NotesDB>().addNewNote(
-          Note(title, contentControllerText),
+          Note(title: title, content: contentControllerText),
         );
       }
     } else {
@@ -44,7 +44,7 @@ class NoteViewPageService {
         note!.title = titlecontrollerText;
         note!.content = contentControllerText;
 
-        await note!.save();
+        await context.read<NotesDB>().updateNote(note);
       }
     }
   }

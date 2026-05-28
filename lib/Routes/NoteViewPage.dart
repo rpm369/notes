@@ -96,7 +96,7 @@ class _NoteViewPageState extends State<NoteViewPage> {
     return IconButton(
       onPressed: () async {
         await context.read<NotesDB>().deleteNote(widget.note!);
-        Navigator.pop(context, false);
+        Navigator.pop(context);
       },
       icon: Icon(
         Icons.delete,
@@ -115,7 +115,7 @@ class _NoteViewPageState extends State<NoteViewPage> {
         }
 
         bool status = await NoteViewPageService.saveNote(
-          Note(titleController.text, contentController.text),
+          Note(title: titleController.text, content: contentController.text),
         );
         _showSnackBar(content: (status) ? "File Saved !" : "File not Saved !");
       },
