@@ -1,11 +1,11 @@
 class ContentImageModel {
   int id;
-  int notesId;
+  int noteId;
   String imagePath;
 
   ContentImageModel({
     required this.id,
-    required this.notesId,
+    required this.noteId,
     required this.imagePath,
   });
 }

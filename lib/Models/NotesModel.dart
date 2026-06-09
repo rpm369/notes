@@ -3,8 +3,8 @@ class NotesModel {
   int blockId;
   String? title;
   String? content;
-  DateTime creationTimeStamp;
-  DateTime modificationTimeStamp;
+  DateTime createdAt;
+  DateTime updatedAt;
   DateTime? reminder;
   DateTime? deletedAt;
 
@@ -13,8 +13,8 @@ class NotesModel {
     required this.blockId,
     this.title,
     this.content,
-    required this.creationTimeStamp,
-    required this.modificationTimeStamp,
+    required this.createdAt,
+    required this.updatedAt,
     this.reminder,
     this.deletedAt,
   });
