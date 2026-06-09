@@ -6,7 +6,7 @@ abstract class NoteRepository {
   }); // Business Logic: Add Image and Shedule Reminders.
   Future<bool> updateNote({
     NotesModel note,
-  }); // Business Logic: Remove/Add Images and Shedule/Revoke Reminders.
+  }); // Business Logic: Remove/Add Images and Shedule/Revoke Reminders, Move to trash and restore from trash.
   Future<bool> deletePermanently({NotesModel note});
   Future<List<NotesModel>?> getNotesForBlock({
     int blockId,
