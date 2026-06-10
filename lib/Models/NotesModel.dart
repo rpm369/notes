@@ -1,6 +1,6 @@
 class NotesModel {
   final int? id;
-  final int blockId;
+  final int? blockId;
   final String? title;
   final String? content;
   final DateTime createdAt;
@@ -25,10 +25,10 @@ class NotesModel {
       'title': this.title,
       'blockId': this.blockId,
       'content': this.content,
-      'createdAt': this.createdAt,
-      'updatedAt': this.updatedAt,
-      'reminder': this.reminder,
-      'deletedAt': this.deletedAt,
+      'createdAt': this.createdAt.millisecondsSinceEpoch,
+      'updatedAt': this.updatedAt.millisecondsSinceEpoch,
+      'reminder': this.reminder?.millisecondsSinceEpoch,
+      'deletedAt': this.deletedAt?.millisecondsSinceEpoch,
     };
   }
 
@@ -36,34 +36,38 @@ class NotesModel {
     return NotesModel(
       id: json['id'],
       blockId: json['blockId'],
-      createdAt: json['createdAt'],
-      updatedAt: json['updatedAt'],
+      createdAt: DateTime.fromMillisecondsSinceEpoch(json['createdAt']),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(json['updatedAt']),
       title: json['title'],
       content: json['content'],
-      reminder: json['reminder'],
-      deletedAt: json['deletedAt'],
+      reminder: (json['reminder'] != null)
+          ? DateTime.fromMillisecondsSinceEpoch(json['reminder'])
+          : null,
+      deletedAt: (json['deletedAt'] != null)
+          ? DateTime.fromMillisecondsSinceEpoch(json['deletedAt'])
+          : null,
     );
   }
 
   NotesModel copyWith({
     int? id,
     String? title,
-    int? blockId,
+    required int? blockId,
     String? content,
     DateTime? createdAt,
-    DateTime? deletedAt,
+    required DateTime? deletedAt,
     DateTime? updatedAt,
-    DateTime? reminder,
+    required DateTime? reminder,
   }) {
     return NotesModel(
       id: id ?? this.id,
-      blockId: blockId ?? this.blockId,
+      blockId: blockId,
       title: title ?? this.title,
       content: content ?? this.content,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      reminder: reminder ?? this.reminder,
-      deletedAt: deletedAt ?? this.deletedAt,
+      reminder: reminder,
+      deletedAt: deletedAt,
     );
   }
 }
