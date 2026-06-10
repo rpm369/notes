@@ -16,7 +16,7 @@ class ToDoModel {
       'id': this.id,
       'listId': this.listId,
       'name': this.name,
-      'completionStatus': this.completionStatus,
+      'completionStatus': (this.completionStatus) ? 1 : 0,
     };
   }
 
@@ -25,7 +25,7 @@ class ToDoModel {
       id: json['id'],
       listId: json['listId'],
       name: json['name'],
-      completionStatus: json['completionStatus'],
+      completionStatus: json['completionStatus'] == 1,
     );
   }
 

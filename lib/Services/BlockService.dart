@@ -13,4 +13,5 @@ class BlockService {
   Future<void> renameBlock({required BlockModel block}) async {}
   Future<void> deleteBlockWithNotes({required int blockId}) async {}
   Future<void> deleteBlockWithoutNotes({required int blockId}) async {}
+  Future<int> getTotalNotesInBlock({required int blockId}) async {}
 }

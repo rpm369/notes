@@ -7,6 +7,7 @@ class NotesService {
   final NoteRepository notesRepo;
   final ReminderService reminderService;
   final ImageStorageService imageService;
+
   NotesService({
     required this.notesRepo,
     required this.reminderService,
