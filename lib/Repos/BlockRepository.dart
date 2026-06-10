@@ -1,6 +1,6 @@
 import 'package:notes/Models/BlockModel.dart';
 
-abstract class Blockrepository {
+abstract class BlockRepository {
   Future<int> createBlock({required BlockModel block});
   Future<void> updateBlock({required BlockModel block});
   Future<void> deleteBlock({required int blockId});
