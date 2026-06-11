@@ -65,6 +65,14 @@ class NotesService {
     }
   }
 
+  Future<void> removeBlockAssociations({required int blockId}) async {
+    await notesRepo.removeBlockAssociation(blockId: blockId);
+  }
+
+  Future<int> getTotalNotesInBlock({required int blockId}) async {
+    return await notesRepo.getTotalNotesInBlock(blockId: blockId);
+  }
+
   Future<void> restoreTrashNotes({required List<NotesModel> notesList}) async {
     for (NotesModel note in notesList) {
       bool isOutDated = true;
@@ -84,6 +92,7 @@ class NotesService {
   }
 
   Future<void> deleteNotesPermanently({required List<int> noteIds}) async {
+    //since they are being deleted from Trash means their schedules has already canceled.
     for (int noteId in noteIds) {
       await imageService.deleteImageFor(notesId: noteId);
       await notesRepo.deletePermanently(noteId: noteId);

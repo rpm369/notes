@@ -5,7 +5,6 @@ abstract class NoteRepository {
   Future<void> updateNote({required NotesModel note});
   Future<void> deletePermanently({required int noteId});
   Future<void> removeBlockAssociation({required int blockId});
-  Future<void> deleteNotesFromBlock({required int blockId});
   Future<List<NotesModel>> getNotesForBlock({required int blockId});
   Future<List<NotesModel>> getTrashNotes();
   Future<List<NotesModel>> getReminderNotes();
