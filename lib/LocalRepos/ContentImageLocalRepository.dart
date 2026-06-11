@@ -16,6 +16,14 @@ class ContentImageLocalRepository implements ContentImageRepo {
     await _db.delete('content_images', where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<void> deleteImageFor({required int notesId}) async {
+    await _db.delete(
+      'content_images',
+      where: 'noteId = ?',
+      whereArgs: [notesId],
+    );
+  }
+
   @override
   Future<List<ContentImageModel>> getAllImagesFor({required int noteId}) async {
     final List<Map<String, dynamic>> maps = await _db.query(

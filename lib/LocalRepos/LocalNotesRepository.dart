@@ -22,6 +22,18 @@ class LocalNotesRepository implements NoteRepository {
   }
 
   @override
+  Future<NotesModel?> getNote({required int noteId}) async {
+    List<Map<String, dynamic>> notesMap = await _db.query(
+      'notes',
+      where: 'id = ?',
+      whereArgs: [noteId],
+    );
+
+    if (notesMap.isNotEmpty) return NotesModel.fromJson(json: notesMap.first);
+    return null;
+  }
+
+  @override
   Future<List<NotesModel>> getNotesForBlock({required int blockId}) async {
     final List<Map<String, dynamic>> maps = await _db.query(
       'notes',
@@ -73,6 +85,19 @@ class LocalNotesRepository implements NoteRepository {
       note.toJson(),
       where: 'id = ?',
       whereArgs: [note.id],
+    );
+  }
+
+  @override
+  Future<void> changeBlockFor({
+    required int noteId,
+    required int newBlockId,
+  }) async {
+    await _db.update(
+      'notes',
+      {'blockId': newBlockId},
+      where: "id = ?",
+      whereArgs: [newBlockId],
     );
   }
 
