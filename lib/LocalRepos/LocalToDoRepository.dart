@@ -22,6 +22,18 @@ class LocalToDoRepository implements ToDoRepository {
   }
 
   @override
+  Future<ToDoModel?> getTodo({required toDoId}) async {
+    List<Map<String, dynamic>> entry = await _db.query(
+      'todos',
+      where: 'id = ?',
+      whereArgs: [toDoId],
+    );
+
+    if (entry.isNotEmpty) return ToDoModel.fromJson(json: entry.first);
+    return null;
+  }
+
+  @override
   Future<void> updateToDo({required ToDoModel toDo}) async {
     await _db.update(
       'todos',
