@@ -55,7 +55,10 @@ class NotificationCenter {
     List<NotificationModel> notificationModels = await AwesomeNotifications()
         .listScheduledNotifications();
 
-    return notificationModels.contains((models) => models.content!.id == key);
+    for (NotificationModel model in notificationModels) {
+      if (model.content!.id == key) return true;
+    }
+    return false;
   }
 
   static Future<void> sheduleNotification({

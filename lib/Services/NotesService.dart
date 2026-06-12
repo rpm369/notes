@@ -22,7 +22,7 @@ class NotesService {
     //storing the notes and getting their auto-generated id.
     int id = await notesRepo.createNote(note: note);
 
-    imageService.saveImages(imageList: images, noteId: id);
+    await imageService.saveImages(imageList: images, noteId: id);
 
     //modifying the note with new id for sheduling reminders.
     note = note.copyWith(

@@ -22,7 +22,7 @@ class LocalToDoRepository implements ToDoRepository {
   }
 
   @override
-  Future<ToDoModel?> getTodo({required toDoId}) async {
+  Future<ToDoModel?> getTodo({required int toDoId}) async {
     List<Map<String, dynamic>> entry = await _db.query(
       'todos',
       where: 'id = ?',

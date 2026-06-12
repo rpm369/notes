@@ -92,7 +92,7 @@ class LocalNotesRepository implements NoteRepository {
       'notes',
       {'blockId': newBlockId},
       where: "id = ?",
-      whereArgs: [newBlockId],
+      whereArgs: [noteId],
     );
   }
 

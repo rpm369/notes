@@ -34,11 +34,12 @@ class BlockService {
     }
 
     await notesService.deleteNotesPermanently(noteIds: notesId);
-    blockRepo.deleteBlock(blockId: blockId);
+    await blockRepo.deleteBlock(blockId: blockId);
   }
 
   Future<void> deleteBlockWithoutNotes({required int blockId}) async {
     await notesService.removeBlockAssociations(blockId: blockId);
+    await blockRepo.deleteBlock(blockId: blockId);
   }
 
   Future<int> getTotalNotesInBlock({required int blockId}) async {

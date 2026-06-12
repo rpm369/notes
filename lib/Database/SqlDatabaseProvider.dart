@@ -34,7 +34,7 @@ class SqlDatabaseProvider {
             content TEXT,
             createdAt INTEGER NOT NULL,
             updatedAt INTEGER NOT NULL,
-            reminder TEXT,
+            reminder INTEGER,
             deletedAt INTEGER,
             FOREIGN KEY (blockId) REFERENCES blocks (id)
           )
