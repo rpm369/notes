@@ -1,4 +1,5 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:notes/Database/SqlDatabaseProvider.dart';
 import 'package:notes/main.dart';
 
 class NotificationCenter {
@@ -25,7 +26,28 @@ class NotificationCenter {
           (route) => route.isFirst,
         );
       },
-      onNotificationDisplayedMethod: (notification) async {},
+      onNotificationDisplayedMethod: onNotificationDisplayedMethod,
+    );
+  }
+
+  @pragma('vm:entry-point')
+  static Future<void> onNotificationDisplayedMethod(
+    ReceivedNotification notification,
+  ) async {
+    final noteId = notification.id;
+    if (noteId != null) {
+      await _clearNoteReminder(noteId);
+    }
+  }
+
+  static Future<void> _clearNoteReminder(int noteId) async {
+    final db = await SqlDatabaseProvider.getDatabase();
+
+    await db.update(
+      'notes',
+      {'reminder': null},
+      where: 'id = ?',
+      whereArgs: [noteId],
     );
   }
 

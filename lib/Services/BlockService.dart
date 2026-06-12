@@ -1,7 +1,6 @@
 import 'package:notes/Models/BlockModel.dart';
 import 'package:notes/Models/NotesModel.dart';
 import 'package:notes/Repos/BlockRepository.dart';
-import 'package:notes/Repos/NoteRepository.dart';
 import 'package:notes/Services/NotesService.dart';
 import 'package:notes/Utils/NotificationCenter.dart';
 

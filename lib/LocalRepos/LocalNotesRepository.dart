@@ -12,11 +12,6 @@ class LocalNotesRepository implements NoteRepository {
   }
 
   @override
-  Future<void> deleteNotesFromBlock({required int blockId}) async {
-    await _db.delete('notes', where: 'blockId = ?', whereArgs: [blockId]);
-  }
-
-  @override
   Future<void> deletePermanently({required int noteId}) async {
     await _db.delete('notes', where: 'id = ?', whereArgs: [noteId]);
   }
