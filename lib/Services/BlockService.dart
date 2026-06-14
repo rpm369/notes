@@ -41,8 +41,4 @@ class BlockService {
     await notesService.removeBlockAssociations(blockId: blockId);
     await blockRepo.deleteBlock(blockId: blockId);
   }
-
-  Future<int> getTotalNotesInBlock({required int blockId}) async {
-    return await notesService.getTotalNotesInBlock(blockId: blockId);
-  }
 }

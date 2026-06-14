@@ -8,7 +8,6 @@ abstract class NoteRepository {
   Future<List<NotesModel>> getNotesForBlock({required int blockId});
   Future<List<NotesModel>> getTrashNotes();
   Future<List<NotesModel>> getReminderNotes();
-  Future<int> getTotalNotesInBlock({required int blockId});
   Future<NotesModel?> getNote({required int noteId});
   Future<void> changeBlockFor({required int noteId, required int newBlockId});
 }

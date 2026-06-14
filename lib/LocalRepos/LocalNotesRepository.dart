@@ -95,13 +95,4 @@ class LocalNotesRepository implements NoteRepository {
       whereArgs: [noteId],
     );
   }
-
-  @override
-  Future<int> getTotalNotesInBlock({required int blockId}) async {
-    final List<Map<String, dynamic>> result = await _db.rawQuery(
-      'SELECT COUNT(*) FROM notes WHERE blockId = ? AND deletedAt IS NULL',
-      [blockId],
-    );
-    return Sqflite.firstIntValue(result) ?? 0;
-  }
 }

@@ -69,10 +69,6 @@ class NotesService {
     await notesRepo.removeBlockAssociation(blockId: blockId);
   }
 
-  Future<int> getTotalNotesInBlock({required int blockId}) async {
-    return await notesRepo.getTotalNotesInBlock(blockId: blockId);
-  }
-
   Future<void> restoreTrashNotes({required List<NotesModel> notesList}) async {
     for (NotesModel note in notesList) {
       bool isOutDated = true;
