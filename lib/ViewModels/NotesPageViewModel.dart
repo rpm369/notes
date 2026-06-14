@@ -85,10 +85,12 @@ class NotesPageViewModel extends ChangeNotifier {
     for (MapEntry<int, List<NotesModel>> entry in _notesByBlock.entries) {
       tempNotesByBlock[entry.key] = [];
 
+      query = query.toLowerCase();
+
       for (NotesModel note in entry.value) {
         if (note.title == null && note.content == null) continue;
-        if ((note.title?.contains(query) ?? false) ||
-            (note.content?.contains(query) ?? false))
+        if ((note.title?.toLowerCase().contains(query) ?? false) ||
+            (note.content?.toLowerCase().contains(query) ?? false))
           tempNotesByBlock[entry.key]!.add(note);
       }
 
@@ -123,8 +125,13 @@ class NotesPageViewModel extends ChangeNotifier {
     await loadData();
   }
 
-  Future<void> renameBlock({required int blockId, required String newTitle}) async {
-    await blockService.renameBlock(block: BlockModel(id: blockId, title: newTitle));
+  Future<void> renameBlock({
+    required int blockId,
+    required String newTitle,
+  }) async {
+    await blockService.renameBlock(
+      block: BlockModel(id: blockId, title: newTitle),
+    );
     await loadData();
   }
 
