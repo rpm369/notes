@@ -9,8 +9,10 @@ class ToDoService {
     return await toDoRepo.getAllToDosFor(listId: listId);
   }
 
-  Future<void> createToDo({required ToDoModel todo}) async {
-    await toDoRepo.createToDo(toDo: todo);
+  Future<void> createToDo({required List<ToDoModel> toDos}) async {
+    for (ToDoModel toDo in toDos) {
+      await toDoRepo.createToDo(toDo: toDo);
+    }
   }
 
   Future<void> toggleCompletion({required int toDoId}) async {

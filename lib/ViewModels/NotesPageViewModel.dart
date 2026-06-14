@@ -108,32 +108,39 @@ class NotesPageViewModel extends ChangeNotifier {
 
   // Block related Operations
 
-  Future<void> createBlock({required BlockModel block}) async {
-    await blockService.createBlock(block: block);
-    loadData();
+  Future<void> createBlock({required String title}) async {
+    await blockService.createBlock(block: BlockModel(title: title));
+    await loadData();
   }
 
   Future<void> deleteBlockWithNotes({required int blockId}) async {
     await blockService.deleteBlockWithNotes(blockId: blockId);
-    loadData();
+    await loadData();
   }
 
   Future<void> deleteBlockWithoutNotes({required int blockId}) async {
     await blockService.deleteBlockWithoutNotes(blockId: blockId);
-
-    loadData();
+    await loadData();
   }
 
-  Future<void> renameBlock({required BlockModel block}) async {
-    await blockService.renameBlock(block: block);
-    loadData();
+  Future<void> renameBlock({required int blockId, required String newTitle}) async {
+    await blockService.renameBlock(block: BlockModel(id: blockId, title: newTitle));
+    await loadData();
   }
 
   // Notes Operations
 
-  Future<void> moveNotesToTrash({required List<NotesModel> notes}) async {
-    await notesService.moveNotesToTrash(notesList: notes);
-    loadData();
+  Future<void> moveNotesToTrash({required List<int> noteIds}) async {
+    List<NotesModel> notesToTrash = [];
+    for (List<NotesModel> notes in _notesByBlock.values) {
+      for (NotesModel note in notes) {
+        if (noteIds.contains(note.id)) {
+          notesToTrash.add(note);
+        }
+      }
+    }
+    await notesService.moveNotesToTrash(notesList: notesToTrash);
+    await loadData();
   }
 
   Future<void> moveNotesToBlock({
@@ -141,6 +148,6 @@ class NotesPageViewModel extends ChangeNotifier {
     required int blockId,
   }) async {
     await notesService.moveNotesToBlock(noteIds: noteIds, blockId: blockId);
-    loadData();
+    await loadData();
   }
 }

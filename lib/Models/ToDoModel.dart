@@ -8,7 +8,7 @@ class ToDoModel {
     this.id,
     required this.listId,
     required this.name,
-    required this.completionStatus,
+    this.completionStatus = false,
   });
 
   Map<String, dynamic> toJson() {
