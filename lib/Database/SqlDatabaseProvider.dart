@@ -19,6 +19,7 @@ class SqlDatabaseProvider {
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: (db, version) async {
+        print(db.path); //Debugging statement
         await db.execute('''
           CREATE TABLE blocks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,8 +69,6 @@ class SqlDatabaseProvider {
       },
     );
   }
-
-  static Future<void> createBlockTable() async {}
 
   static Future<String> _getDbFilePath() async {
     String docPath = (await getApplicationDocumentsDirectory()).path;

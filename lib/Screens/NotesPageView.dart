@@ -1,0 +1,461 @@
+// ignore_for_file: deprecated_member_use
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:notes/ViewModels/NotesPageViewModel.dart';
+import 'package:notes/Models/BlockModel.dart';
+
+// Import modular subcomponents
+import 'package:notes/Components/NotesPageComponents/NotesAppBar.dart';
+import 'package:notes/Components/NotesPageComponents/NotesSearchBar.dart';
+import 'package:notes/Components/NotesPageComponents/NotesBlockHeader.dart';
+import 'package:notes/Components/NotesPageComponents/NoteCard.dart';
+import 'package:notes/Components/NotesPageComponents/NotesBottomPanel.dart';
+import 'package:notes/Components/NotesPageComponents/NotesSelectionBar.dart';
+
+class NotesPageView extends StatefulWidget {
+  const NotesPageView({super.key});
+
+  @override
+  State<NotesPageView> createState() => _NotesPageViewState();
+}
+
+class _NotesPageViewState extends State<NotesPageView> {
+  final TextEditingController _searchController = TextEditingController();
+  bool _isMenuExpanded = false;
+  bool _isSelectionMode = false;
+  final Set<int> _selectedNoteIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<NotesPageViewModel>().loadData();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  String _formatNoteDate(DateTime dt) {
+    final now = DateTime.now();
+    final difference = now.difference(dt);
+
+    if (difference.inSeconds < 60) {
+      return "edited just now";
+    } else if (difference.inMinutes < 60) {
+      final mins = difference.inMinutes;
+      return "edited $mins minute${mins == 1 ? '' : 's'} ago";
+    } else if (difference.inHours < 24 && dt.day == now.day) {
+      final hrs = difference.inHours;
+      return "edited $hrs hour${hrs == 1 ? '' : 's'} ago";
+    } else {
+      final months = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+      ];
+      final monthStr = months[dt.month - 1];
+      final hour = dt.hour == 0 ? 12 : (dt.hour > 12 ? dt.hour - 12 : dt.hour);
+      final minuteStr = dt.minute.toString().padLeft(2, '0');
+      final ampm = dt.hour >= 12 ? 'PM' : 'AM';
+      return "${dt.day} $monthStr • $hour:$minuteStr $ampm";
+    }
+  }
+
+  void _toggleSelection(int noteId) {
+    setState(() {
+      if (_selectedNoteIds.contains(noteId)) {
+        _selectedNoteIds.remove(noteId);
+        if (_selectedNoteIds.isEmpty) {
+          _isSelectionMode = false;
+        }
+      } else {
+        _selectedNoteIds.add(noteId);
+        _isSelectionMode = true;
+      }
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedNoteIds.clear();
+      _isSelectionMode = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = context.watch<NotesPageViewModel>();
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF131110),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                NotesAppBar(
+                  onSettingsPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Settings pressed"),
+                        duration: Duration(milliseconds: 700),
+                      ),
+                    );
+                  },
+                ),
+                NotesSearchBar(
+                  controller: _searchController,
+                  onChanged: (val) {
+                    viewModel.updateSearchQuery(query: val);
+                  },
+                ),
+                Expanded(
+                  child: viewModel.isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF29B6F6),
+                          ),
+                        )
+                      : viewModel.errorMessage.isNotEmpty
+                          ? Center(
+                              child: Text(
+                                viewModel.errorMessage,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            )
+                          : _buildBlocksList(viewModel),
+                ),
+              ],
+            ),
+
+            if (_isSelectionMode)
+              NotesSelectionBar(
+                selectedCount: _selectedNoteIds.length,
+                onClosePressed: _clearSelection,
+                onMoveToBlockPressed: () {
+                  _showMoveToBlockDialog(viewModel);
+                },
+                onDeletePressed: () async {
+                  await viewModel.moveNotesToTrash(noteIds: _selectedNoteIds.toList());
+                  _clearSelection();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Moved to Trash")),
+                    );
+                  }
+                },
+              ),
+
+            if (!_isSelectionMode)
+              NotesBottomPanel(
+                isExpanded: _isMenuExpanded,
+                onToggleExpand: () {
+                  setState(() {
+                    _isMenuExpanded = !_isMenuExpanded;
+                  });
+                },
+                onCreateBlockPressed: () {
+                  setState(() {
+                    _isMenuExpanded = false;
+                  });
+                  _showCreateBlockDialog(viewModel);
+                },
+                onCreateListPressed: () {
+                  setState(() {
+                    _isMenuExpanded = false;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("To-Do list creation clicked"),
+                      duration: Duration(milliseconds: 700),
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBlocksList(NotesPageViewModel viewModel) {
+    final blocks = viewModel.blocks;
+    if (blocks.isEmpty) {
+      return const Center(
+        child: Text(
+          "No notes or blocks found",
+          style: TextStyle(color: Colors.grey, fontSize: 16),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+      itemCount: blocks.length,
+      itemBuilder: (context, index) {
+        final block = blocks[index];
+        final notes = viewModel.notesByBlock[block.id] ?? [];
+        final isExpanded = viewModel.isExpanded(blockId: block.id!);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            NotesBlockHeader(
+              title: block.title,
+              count: notes.length,
+              isExpanded: isExpanded,
+              onTap: () {
+                viewModel.toggleBlockExpansion(blockId: block.id!);
+              },
+              onMenuPressed: () {
+                _showBlockMenu(viewModel, block);
+              },
+            ),
+            const SizedBox(height: 10),
+            if (isExpanded) ...[
+              if (notes.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(left: 8.0, bottom: 20.0),
+                  child: Text(
+                    "Empty block",
+                    style: TextStyle(color: Colors.grey, fontSize: 14),
+                  ),
+                )
+              else
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: notes.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.1,
+                  ),
+                  itemBuilder: (context, noteIndex) {
+                    final note = notes[noteIndex];
+                    final isSelected = _selectedNoteIds.contains(note.id);
+                    return NoteCard(
+                      note: note,
+                      formattedDate: _formatNoteDate(note.updatedAt),
+                      isSelected: isSelected,
+                      onTap: () {
+                        if (_isSelectionMode) {
+                          _toggleSelection(note.id!);
+                        }
+                      },
+                      onLongPress: () {
+                        _toggleSelection(note.id!);
+                      },
+                    );
+                  },
+                ),
+              const SizedBox(height: 24),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  void _showCreateBlockDialog(NotesPageViewModel viewModel) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF282321),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text("New Block", style: TextStyle(color: Colors.white)),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            style: const TextStyle(color: Colors.white),
+            cursorColor: const Color(0xFF29B6F6),
+            decoration: const InputDecoration(
+              hintText: "Enter block title...",
+              hintStyle: TextStyle(color: Colors.grey),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey),
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFF29B6F6)),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF29B6F6),
+              ),
+              onPressed: () async {
+                if (controller.text.trim().isNotEmpty) {
+                  await viewModel.createBlock(title: controller.text.trim());
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text("Create", style: TextStyle(color: Colors.black)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showBlockMenu(NotesPageViewModel viewModel, BlockModel block) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF282321),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.edit, color: Colors.white),
+                title: const Text("Rename Block", style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showRenameBlockDialog(viewModel, block);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_sweep, color: Colors.redAccent),
+                title: const Text("Delete Block & Notes", style: TextStyle(color: Colors.redAccent)),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await viewModel.deleteBlockWithNotes(blockId: block.id!);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Block and notes deleted")),
+                    );
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.orangeAccent),
+                title: const Text("Delete Block, Keep Notes", style: TextStyle(color: Colors.orangeAccent)),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await viewModel.deleteBlockWithoutNotes(blockId: block.id!);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Block deleted; notes moved to Uncategorized")),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showRenameBlockDialog(NotesPageViewModel viewModel, BlockModel block) {
+    final controller = TextEditingController(text: block.title);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF282321),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text("Rename Block", style: TextStyle(color: Colors.white)),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            style: const TextStyle(color: Colors.white),
+            cursorColor: const Color(0xFF29B6F6),
+            decoration: const InputDecoration(
+              hintText: "Enter new title...",
+              hintStyle: TextStyle(color: Colors.grey),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey),
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFF29B6F6)),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF29B6F6),
+              ),
+              onPressed: () async {
+                if (controller.text.trim().isNotEmpty) {
+                  await viewModel.renameBlock(
+                    blockId: block.id!,
+                    newTitle: controller.text.trim(),
+                  );
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text("Rename", style: TextStyle(color: Colors.black)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showMoveToBlockDialog(NotesPageViewModel viewModel) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF282321),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text("Select Destination Block", style: TextStyle(color: Colors.white)),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: viewModel.blocks.length,
+              itemBuilder: (context, index) {
+                final block = viewModel.blocks[index];
+                return ListTile(
+                  title: Text(block.title, style: const TextStyle(color: Colors.white)),
+                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 14),
+                  onTap: () async {
+                    await viewModel.moveNotesToBlock(
+                      noteIds: _selectedNoteIds.toList(),
+                      blockId: block.id!,
+                    );
+                    _clearSelection();
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Moved notes to ${block.title}")),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}

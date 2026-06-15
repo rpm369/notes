@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:notes/Screens/NotesPageView.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,14 +11,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: Colors.black,
-      body: Center(
-        child: Text(
-          "Test",
-          style: TextStyle(color: Colors.white, fontSize: 30),
-        ),
-      ),
+      body: NotesPageView(),
     );
   }
 }
+
