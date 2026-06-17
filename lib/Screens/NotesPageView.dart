@@ -1,10 +1,12 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:notes/Models/NotesModel.dart';
 import 'package:provider/provider.dart';
 import 'package:notes/ViewModels/NotesPageViewModel.dart';
 import 'package:notes/Models/BlockModel.dart';
+import 'package:notes/Screens/TrashView.dart';
 
 // Import modular subcomponents
 import 'package:notes/Components/NotesPageComponents/NotesAppBar.dart';
@@ -108,13 +110,14 @@ class _NotesPageViewState extends State<NotesPageView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 NotesAppBar(
-                  onSettingsPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Settings pressed"),
-                        duration: Duration(milliseconds: 700),
+                  onTrashPressed: () async {
+                    await Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                        builder: (context) => const TrashView(),
                       ),
                     );
+                    await viewModel.loadData();
                   },
                 ),
                 NotesSearchBar(
@@ -181,7 +184,9 @@ class _NotesPageViewState extends State<NotesPageView> {
         final bool isOthers = index == blocks.length;
         final String title = isOthers ? "OTHERS" : blocks[index].title;
         final int? blockId = isOthers ? null : blocks[index].id;
-        final List<NotesModel> notes = isOthers ? otherNotes : (viewModel.notesByBlock[blockId] ?? []);
+        final List<NotesModel> notes = isOthers
+            ? otherNotes
+            : (viewModel.notesByBlock[blockId] ?? []);
         final isExpanded = viewModel.isExpanded(blockId: blockId);
 
         return Column(
@@ -194,9 +199,11 @@ class _NotesPageViewState extends State<NotesPageView> {
               onTap: () {
                 viewModel.toggleBlockExpansion(blockId: blockId);
               },
-              onMenuPressed: isOthers ? null : () {
-                _showBlockMenu(viewModel, blocks[index]);
-              },
+              onMenuPressed: isOthers
+                  ? null
+                  : () {
+                      _showBlockMenu(viewModel, blocks[index]);
+                    },
             ),
             const SizedBox(height: 10),
             if (isExpanded) ...[
@@ -244,8 +251,6 @@ class _NotesPageViewState extends State<NotesPageView> {
       },
     );
   }
-
-
 
   void _showBlockMenu(NotesPageViewModel viewModel, BlockModel block) {
     showModalBottomSheet(
@@ -398,8 +403,12 @@ class _NotesPageViewState extends State<NotesPageView> {
               itemCount: viewModel.blocks.length + 1,
               itemBuilder: (context, index) {
                 final bool isOthers = index == viewModel.blocks.length;
-                final String blockTitle = isOthers ? "OTHERS" : viewModel.blocks[index].title;
-                final int? targetBlockId = isOthers ? null : viewModel.blocks[index].id;
+                final String blockTitle = isOthers
+                    ? "OTHERS"
+                    : viewModel.blocks[index].title;
+                final int? targetBlockId = isOthers
+                    ? null
+                    : viewModel.blocks[index].id;
 
                 return ListTile(
                   title: Text(

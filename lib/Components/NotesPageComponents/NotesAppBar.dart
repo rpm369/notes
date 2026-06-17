@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class NotesAppBar extends StatelessWidget {
-  final VoidCallback onSettingsPressed;
+  final VoidCallback onTrashPressed;
 
-  const NotesAppBar({super.key, required this.onSettingsPressed});
+  const NotesAppBar({super.key, required this.onTrashPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -24,9 +24,9 @@ class NotesAppBar extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const IconButton(
-                onPressed: null,
-                icon: Icon(
+              IconButton(
+                onPressed: onTrashPressed,
+                icon: const Icon(
                   Icons.delete_sweep_sharp,
                   color: Colors.white,
                   size: 25,

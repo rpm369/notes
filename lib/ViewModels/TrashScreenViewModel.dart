@@ -57,9 +57,9 @@ class TrashScreenViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> restoreNote({required List<int> notesIds}) async {
+  Future<void> restoreNote({required List<int> noteIds}) async {
     await _notesService.restoreTrashNotes(
-      notesList: _notes.where((note) => notesIds.contains(note.id!)).toList(),
+      notesList: _notes.where((note) => noteIds.contains(note.id!)).toList(),
     );
     await loadData();
   }
