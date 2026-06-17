@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:notes/Models/NotesModel.dart';
 import 'package:provider/provider.dart';
 import 'package:notes/ViewModels/NotesPageViewModel.dart';
 import 'package:notes/Models/BlockModel.dart';
@@ -10,7 +11,6 @@ import 'package:notes/Components/NotesPageComponents/NotesAppBar.dart';
 import 'package:notes/Components/NotesPageComponents/NotesSearchBar.dart';
 import 'package:notes/Components/NotesPageComponents/NotesBlockHeader.dart';
 import 'package:notes/Components/NotesPageComponents/NoteCard.dart';
-import 'package:notes/Components/NotesPageComponents/NotesBottomPanel.dart';
 import 'package:notes/Components/NotesPageComponents/NotesSelectionBar.dart';
 
 class NotesPageView extends StatefulWidget {
@@ -22,7 +22,6 @@ class NotesPageView extends StatefulWidget {
 
 class _NotesPageViewState extends State<NotesPageView> {
   final TextEditingController _searchController = TextEditingController();
-  bool _isMenuExpanded = false;
   bool _isSelectionMode = false;
   final Set<int> _selectedNoteIds = {};
 
@@ -54,8 +53,18 @@ class _NotesPageViewState extends State<NotesPageView> {
       return "edited $hrs hour${hrs == 1 ? '' : 's'} ago";
     } else {
       final months = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
       ];
       final monthStr = months[dt.month - 1];
       final hour = dt.hour == 0 ? 12 : (dt.hour > 12 ? dt.hour - 12 : dt.hour);
@@ -122,13 +131,13 @@ class _NotesPageViewState extends State<NotesPageView> {
                           ),
                         )
                       : viewModel.errorMessage.isNotEmpty
-                          ? Center(
-                              child: Text(
-                                viewModel.errorMessage,
-                                style: const TextStyle(color: Colors.red),
-                              ),
-                            )
-                          : _buildBlocksList(viewModel),
+                      ? Center(
+                          child: Text(
+                            viewModel.errorMessage,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        )
+                      : _buildBlocksList(viewModel),
                 ),
               ],
             ),
@@ -141,7 +150,9 @@ class _NotesPageViewState extends State<NotesPageView> {
                   _showMoveToBlockDialog(viewModel);
                 },
                 onDeletePressed: () async {
-                  await viewModel.moveNotesToTrash(noteIds: _selectedNoteIds.toList());
+                  await viewModel.moveNotesToTrash(
+                    noteIds: _selectedNoteIds.toList(),
+                  );
                   _clearSelection();
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -151,32 +162,7 @@ class _NotesPageViewState extends State<NotesPageView> {
                 },
               ),
 
-            if (!_isSelectionMode)
-              NotesBottomPanel(
-                isExpanded: _isMenuExpanded,
-                onToggleExpand: () {
-                  setState(() {
-                    _isMenuExpanded = !_isMenuExpanded;
-                  });
-                },
-                onCreateBlockPressed: () {
-                  setState(() {
-                    _isMenuExpanded = false;
-                  });
-                  _showCreateBlockDialog(viewModel);
-                },
-                onCreateListPressed: () {
-                  setState(() {
-                    _isMenuExpanded = false;
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("To-Do list creation clicked"),
-                      duration: Duration(milliseconds: 700),
-                    ),
-                  );
-                },
-              ),
+            // NotesBottomPanel has been moved to HomeScreen's unified bottom navigation bar.
           ],
         ),
       ),
@@ -185,35 +171,31 @@ class _NotesPageViewState extends State<NotesPageView> {
 
   Widget _buildBlocksList(NotesPageViewModel viewModel) {
     final blocks = viewModel.blocks;
-    if (blocks.isEmpty) {
-      return const Center(
-        child: Text(
-          "No notes or blocks found",
-          style: TextStyle(color: Colors.grey, fontSize: 16),
-        ),
-      );
-    }
+    final otherNotes = viewModel.notesByBlock[null] ?? [];
 
+    // Render database blocks, followed by the hardcoded default "OTHERS" block.
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-      itemCount: blocks.length,
+      itemCount: blocks.length + 1,
       itemBuilder: (context, index) {
-        final block = blocks[index];
-        final notes = viewModel.notesByBlock[block.id] ?? [];
-        final isExpanded = viewModel.isExpanded(blockId: block.id!);
+        final bool isOthers = index == blocks.length;
+        final String title = isOthers ? "OTHERS" : blocks[index].title;
+        final int? blockId = isOthers ? null : blocks[index].id;
+        final List<NotesModel> notes = isOthers ? otherNotes : (viewModel.notesByBlock[blockId] ?? []);
+        final isExpanded = viewModel.isExpanded(blockId: blockId);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             NotesBlockHeader(
-              title: block.title,
+              title: title,
               count: notes.length,
               isExpanded: isExpanded,
               onTap: () {
-                viewModel.toggleBlockExpansion(blockId: block.id!);
+                viewModel.toggleBlockExpansion(blockId: blockId);
               },
-              onMenuPressed: () {
-                _showBlockMenu(viewModel, block);
+              onMenuPressed: isOthers ? null : () {
+                _showBlockMenu(viewModel, blocks[index]);
               },
             ),
             const SizedBox(height: 10),
@@ -263,53 +245,7 @@ class _NotesPageViewState extends State<NotesPageView> {
     );
   }
 
-  void _showCreateBlockDialog(NotesPageViewModel viewModel) {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF282321),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text("New Block", style: TextStyle(color: Colors.white)),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            style: const TextStyle(color: Colors.white),
-            cursorColor: const Color(0xFF29B6F6),
-            decoration: const InputDecoration(
-              hintText: "Enter block title...",
-              hintStyle: TextStyle(color: Colors.grey),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey),
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF29B6F6)),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF29B6F6),
-              ),
-              onPressed: () async {
-                if (controller.text.trim().isNotEmpty) {
-                  await viewModel.createBlock(title: controller.text.trim());
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text("Create", style: TextStyle(color: Colors.black)),
-            ),
-          ],
-        );
-      },
-    );
-  }
+
 
   void _showBlockMenu(NotesPageViewModel viewModel, BlockModel block) {
     showModalBottomSheet(
@@ -325,15 +261,24 @@ class _NotesPageViewState extends State<NotesPageView> {
             children: [
               ListTile(
                 leading: const Icon(Icons.edit, color: Colors.white),
-                title: const Text("Rename Block", style: TextStyle(color: Colors.white)),
+                title: const Text(
+                  "Rename Block",
+                  style: TextStyle(color: Colors.white),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _showRenameBlockDialog(viewModel, block);
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.delete_sweep, color: Colors.redAccent),
-                title: const Text("Delete Block & Notes", style: TextStyle(color: Colors.redAccent)),
+                leading: const Icon(
+                  Icons.delete_sweep,
+                  color: Colors.redAccent,
+                ),
+                title: const Text(
+                  "Delete Block & Notes",
+                  style: TextStyle(color: Colors.redAccent),
+                ),
                 onTap: () async {
                   Navigator.pop(context);
                   await viewModel.deleteBlockWithNotes(blockId: block.id!);
@@ -345,14 +290,24 @@ class _NotesPageViewState extends State<NotesPageView> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.delete_outline, color: Colors.orangeAccent),
-                title: const Text("Delete Block, Keep Notes", style: TextStyle(color: Colors.orangeAccent)),
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: Colors.orangeAccent,
+                ),
+                title: const Text(
+                  "Delete Block, Keep Notes",
+                  style: TextStyle(color: Colors.orangeAccent),
+                ),
                 onTap: () async {
                   Navigator.pop(context);
                   await viewModel.deleteBlockWithoutNotes(blockId: block.id!);
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Block deleted; notes moved to Uncategorized")),
+                      const SnackBar(
+                        content: Text(
+                          "Block deleted; notes moved to Uncategorized",
+                        ),
+                      ),
                     );
                   }
                 },
@@ -371,8 +326,13 @@ class _NotesPageViewState extends State<NotesPageView> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF282321),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text("Rename Block", style: TextStyle(color: Colors.white)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            "Rename Block",
+            style: TextStyle(color: Colors.white),
+          ),
           content: TextField(
             controller: controller,
             autofocus: true,
@@ -407,7 +367,10 @@ class _NotesPageViewState extends State<NotesPageView> {
                   Navigator.pop(context);
                 }
               },
-              child: const Text("Rename", style: TextStyle(color: Colors.black)),
+              child: const Text(
+                "Rename",
+                style: TextStyle(color: Colors.black),
+              ),
             ),
           ],
         );
@@ -421,27 +384,42 @@ class _NotesPageViewState extends State<NotesPageView> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF282321),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text("Select Destination Block", style: TextStyle(color: Colors.white)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            "Select Destination Block",
+            style: TextStyle(color: Colors.white),
+          ),
           content: SizedBox(
             width: double.maxFinite,
             child: ListView.builder(
               shrinkWrap: true,
-              itemCount: viewModel.blocks.length,
+              itemCount: viewModel.blocks.length + 1,
               itemBuilder: (context, index) {
-                final block = viewModel.blocks[index];
+                final bool isOthers = index == viewModel.blocks.length;
+                final String blockTitle = isOthers ? "OTHERS" : viewModel.blocks[index].title;
+                final int? targetBlockId = isOthers ? null : viewModel.blocks[index].id;
+
                 return ListTile(
-                  title: Text(block.title, style: const TextStyle(color: Colors.white)),
-                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 14),
+                  title: Text(
+                    blockTitle,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.grey,
+                    size: 14,
+                  ),
                   onTap: () async {
                     await viewModel.moveNotesToBlock(
                       noteIds: _selectedNoteIds.toList(),
-                      blockId: block.id!,
+                      blockId: targetBlockId,
                     );
                     _clearSelection();
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Moved notes to ${block.title}")),
+                      SnackBar(content: Text("Moved notes to $blockTitle")),
                     );
                   },
                 );

@@ -19,7 +19,6 @@ class SqlDatabaseProvider {
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: (db, version) async {
-        print(db.path); //Debugging statement
         await db.execute('''
           CREATE TABLE blocks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -48,21 +48,27 @@ class NotesBottomPanel extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const SizedBox(width: 8),
-                  _buildPanelButton(
-                    icon: Icons.create_new_folder_outlined,
-                    label: "Block",
-                    onTap: onCreateBlockPressed,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const SizedBox(width: 8),
+                      _buildPanelButton(
+                        icon: Icons.create_new_folder_outlined,
+                        label: "Block",
+                        onTap: onCreateBlockPressed,
+                      ),
+                      const SizedBox(width: 24),
+                      _buildPanelButton(
+                        icon: Icons.playlist_add_check_outlined,
+                        label: "List",
+                        onTap: onCreateListPressed,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 24),
-                  _buildPanelButton(
-                    icon: Icons.playlist_add_check_outlined,
-                    label: "List",
-                    onTap: onCreateListPressed,
-                  ),
-                ],
+                ),
               ),
               GestureDetector(
                 onTap: onToggleExpand,
@@ -72,11 +78,7 @@ class NotesBottomPanel extends StatelessWidget {
                     color: Color(0xFF483D39), // Darker grey circle background
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                  child: const Icon(Icons.close, color: Colors.white, size: 20),
                 ),
               ),
             ],
@@ -106,10 +108,7 @@ class NotesBottomPanel extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(
-                color: Colors.grey.shade400,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
             ),
           ],
         ),

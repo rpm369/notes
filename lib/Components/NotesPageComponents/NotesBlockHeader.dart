@@ -5,7 +5,7 @@ class NotesBlockHeader extends StatelessWidget {
   final int count;
   final bool isExpanded;
   final VoidCallback onTap;
-  final VoidCallback onMenuPressed;
+  final VoidCallback? onMenuPressed;
 
   const NotesBlockHeader({
     super.key,
@@ -13,7 +13,7 @@ class NotesBlockHeader extends StatelessWidget {
     required this.count,
     required this.isExpanded,
     required this.onTap,
-    required this.onMenuPressed,
+    this.onMenuPressed,
   });
 
   @override
@@ -45,13 +45,15 @@ class NotesBlockHeader extends StatelessWidget {
             ),
             Row(
               children: [
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: const Icon(Icons.more_vert, color: Colors.grey, size: 20),
-                  onPressed: onMenuPressed,
-                ),
-                const SizedBox(width: 8),
+                if (onMenuPressed != null) ...[
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: const Icon(Icons.more_vert, color: Colors.grey, size: 20),
+                    onPressed: onMenuPressed,
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 Icon(
                   isExpanded ? Icons.keyboard_arrow_down : Icons.chevron_right,
                   color: headerColor,

@@ -38,7 +38,7 @@ class NotesService {
     return id;
   }
 
-  Future<List<NotesModel>> getNotesForBlock({required int blockId}) async {
+  Future<List<NotesModel>> getNotesForBlock({required int? blockId}) async {
     return await notesRepo.getNotesForBlock(blockId: blockId);
   }
 
@@ -118,7 +118,7 @@ class NotesService {
 
   Future<void> moveNotesToBlock({
     required List<int> noteIds,
-    required int blockId,
+    required int? blockId,
   }) async {
     for (int noteId in noteIds) {
       await notesRepo.changeBlockFor(noteId: noteId, newBlockId: blockId);

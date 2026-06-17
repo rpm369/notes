@@ -12,17 +12,17 @@ class NotesPageViewModel extends ChangeNotifier {
 
   bool isLoading = false;
   List<BlockModel> _blocks = [];
-  Map<int, List<NotesModel>> _notesByBlock = {};
+  Map<int?, List<NotesModel>> _notesByBlock = {};
   List<BlockModel> _searchedBlocks = [];
-  Map<int, List<NotesModel>> _searchedNotesByBlock = {};
-  Set<int> expandedBlocks = {};
+  Map<int?, List<NotesModel>> _searchedNotesByBlock = {};
+  Set<int?> expandedBlocks = {};
   String errorMessage = '';
 
   List<BlockModel> get blocks {
     return _searchedBlocks;
   }
 
-  Map<int, List<NotesModel>> get notesByBlock {
+  Map<int?, List<NotesModel>> get notesByBlock {
     return _searchedNotesByBlock;
   }
 
@@ -35,7 +35,7 @@ class NotesPageViewModel extends ChangeNotifier {
 
     try {
       _blocks = await blockService.getAllBlocks();
-      
+
       // Seed initial dummy data if database is empty to match the user's mockup.
       if (_blocks.isEmpty) {
         await _seedInitialData();
@@ -45,11 +45,13 @@ class NotesPageViewModel extends ChangeNotifier {
       _notesByBlock.clear();
 
       for (BlockModel block in _blocks) {
-        _notesByBlock[block.id!] = await notesService.getNotesForBlock(
-          blockId: block.id!,
+        _notesByBlock[block.id] = await notesService.getNotesForBlock(
+          blockId: block.id,
         );
       }
-      
+
+      _notesByBlock[null] = await notesService.getNotesForBlock(blockId: null);
+
       // Auto-expand all blocks by default on first load
       if (expandedBlocks.isEmpty) {
         for (BlockModel block in _blocks) {
@@ -69,7 +71,7 @@ class NotesPageViewModel extends ChangeNotifier {
 
   //UI related Operations
 
-  void toggleBlockExpansion({required int blockId}) {
+  void toggleBlockExpansion({required int? blockId}) {
     if (expandedBlocks.contains(blockId)) {
       expandedBlocks.remove(blockId);
     } else {
@@ -78,7 +80,7 @@ class NotesPageViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool isExpanded({required int blockId}) {
+  bool isExpanded({required int? blockId}) {
     return expandedBlocks.contains(blockId);
   }
 
@@ -93,10 +95,10 @@ class NotesPageViewModel extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
 
-    Map<int, List<NotesModel>> tempNotesByBlock = {};
+    Map<int?, List<NotesModel>> tempNotesByBlock = {};
     List<BlockModel> tempBlocks = [];
 
-    for (MapEntry<int, List<NotesModel>> entry in _notesByBlock.entries) {
+    for (MapEntry<int?, List<NotesModel>> entry in _notesByBlock.entries) {
       tempNotesByBlock[entry.key] = [];
 
       query = query.toLowerCase();
@@ -108,10 +110,12 @@ class NotesPageViewModel extends ChangeNotifier {
           tempNotesByBlock[entry.key]!.add(note);
       }
 
-      if (tempNotesByBlock[entry.key]!.isEmpty)
+      if (tempNotesByBlock[entry.key]!.isEmpty) {
         tempNotesByBlock.remove(entry.key);
-      else {
-        tempBlocks.add(_blocks.firstWhere((block) => block.id! == entry.key));
+      } else {
+        if (entry.key != null) {
+          tempBlocks.add(_blocks.firstWhere((block) => block.id! == entry.key));
+        }
       }
 
       _searchedBlocks = tempBlocks;
@@ -166,7 +170,7 @@ class NotesPageViewModel extends ChangeNotifier {
 
   Future<void> moveNotesToBlock({
     required List<int> noteIds,
-    required int blockId,
+    required int? blockId,
   }) async {
     await notesService.moveNotesToBlock(noteIds: noteIds, blockId: blockId);
     await loadData();
@@ -178,11 +182,16 @@ class NotesPageViewModel extends ChangeNotifier {
       // Direct insertion using blockService
       await blockService.createBlock(block: const BlockModel(title: "BALLET"));
       await blockService.createBlock(block: const BlockModel(title: "IDEAS"));
-      await blockService.createBlock(block: const BlockModel(title: "OTHERS"));
 
       final dbBlocks = await blockService.getAllBlocks();
-      final balletBlock = dbBlocks.firstWhere((b) => b.title == "BALLET", orElse: () => dbBlocks.first);
-      final ideasBlock = dbBlocks.firstWhere((b) => b.title == "IDEAS", orElse: () => dbBlocks.first);
+      final balletBlock = dbBlocks.firstWhere(
+        (b) => b.title == "BALLET",
+        orElse: () => dbBlocks.first,
+      );
+      final ideasBlock = dbBlocks.firstWhere(
+        (b) => b.title == "IDEAS",
+        orElse: () => dbBlocks.first,
+      );
 
       // Notes in BALLET block
       final note1 = NotesModel(
@@ -221,6 +230,16 @@ class NotesPageViewModel extends ChangeNotifier {
         updatedAt: DateTime.now().subtract(const Duration(minutes: 7)),
       );
       await notesService.createNote(note: note4, images: []);
+
+      // Note in OTHERS block (null blockId)
+      final noteOthers = NotesModel(
+        blockId: null,
+        title: "Uncategorized Item",
+        content: "This note has no block association and belongs to OTHERS.",
+        createdAt: DateTime.now().subtract(const Duration(minutes: 15)),
+        updatedAt: DateTime.now().subtract(const Duration(minutes: 15)),
+      );
+      await notesService.createNote(note: noteOthers, images: []);
     } catch (e) {
       print("Seeding failed: $e");
     }

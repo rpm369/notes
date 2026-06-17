@@ -48,10 +48,7 @@ class NoteCard extends StatelessWidget {
           children: [
             Text(
               formattedDate,
-              style: TextStyle(
-                color: Colors.blueGrey.shade300,
-                fontSize: 11,
-              ),
+              style: TextStyle(color: Colors.blueGrey.shade300, fontSize: 11),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -87,7 +84,7 @@ class NoteCard extends StatelessWidget {
                   backgroundColor: Color(0xFF29B6F6),
                   child: Icon(Icons.check, size: 12, color: Colors.black),
                 ),
-              )
+              ),
           ],
         ),
       ),

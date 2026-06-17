@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 class NotesAppBar extends StatelessWidget {
   final VoidCallback onSettingsPressed;
 
-  const NotesAppBar({
-    super.key,
-    required this.onSettingsPressed,
-  });
+  const NotesAppBar({super.key, required this.onSettingsPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -15,35 +12,35 @@ class NotesAppBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          const Text(
+            "Notes",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+          ),
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
-                "Notes",
-                style: TextStyle(
+              const IconButton(
+                onPressed: null,
+                icon: Icon(
+                  Icons.delete_sweep_sharp,
                   color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
+                  size: 25,
                 ),
               ),
-              const SizedBox(width: 6),
-              GestureDetector(
-                onTap: () {},
-                child: const Icon(
-                  Icons.arrow_drop_down,
-                  color: Colors.grey,
-                  size: 28,
+              const IconButton(
+                onPressed: null,
+                icon: Icon(
+                  Icons.schedule_rounded,
+                  color: Colors.white,
+                  size: 25,
                 ),
               ),
             ],
-          ),
-          IconButton(
-            onPressed: onSettingsPressed,
-            icon: const Icon(
-              Icons.settings,
-              color: Colors.grey,
-              size: 26,
-            ),
           ),
         ],
       ),

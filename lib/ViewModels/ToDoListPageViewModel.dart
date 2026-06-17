@@ -89,6 +89,15 @@ class ToDoListPageViewModel extends ChangeNotifier {
     await loadData();
   }
 
+  int getTotalCompletedInList({required int listId}) {
+    final toDoList = toDosByList[listId]!;
+    int countCompleted = 0;
+    for (ToDoModel toDo in toDoList) {
+      if (toDo.completionStatus) countCompleted++;
+    }
+    return countCompleted;
+  }
+
   // ToDo related Operations
 
   Future<void> toggleToDoCompletion({required int toDoId}) async {
