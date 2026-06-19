@@ -79,6 +79,7 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => NotesDetailViewModel(
+            imageService: imageService,
             notesService: notesService,
             blockService: blockService,
           ),

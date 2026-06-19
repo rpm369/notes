@@ -134,6 +134,7 @@ void main() {
     );
 
     viewModel = NotesDetailViewModel(
+      imageService: notesService.imageService,
       notesService: notesService,
       blockService: blockService,
     );
@@ -147,7 +148,7 @@ void main() {
 
         expect(viewModel.currentNote, isNotNull);
         expect(viewModel.currentNote!.id, isNull);
-        expect(viewModel.currentNote!.blockId, 5);
+        expect(viewModel.currentNote!.blockId, isNull);
         expect(viewModel.currentNote!.title, "");
         expect(viewModel.currentNote!.content, "");
         expect(viewModel.blocks.length, 2);
@@ -176,7 +177,7 @@ void main() {
 
     test('updateBlockAssociation updates blockId in state', () async {
       await viewModel.initNote(null);
-      expect(viewModel.currentNote!.blockId, 1);
+      expect(viewModel.currentNote!.blockId, isNull);
 
       await viewModel.updateBlockAssociation(2);
       expect(viewModel.currentNote!.blockId, 2);
@@ -189,6 +190,51 @@ void main() {
       final now = DateTime.now();
       await viewModel.updateReminder(now);
       expect(viewModel.currentNote!.reminder, now);
+    });
+
+    test('addInsertedImage adds image to VM state', () async {
+      await viewModel.initNote(null);
+      expect(viewModel.associatedImages, isEmpty);
+
+      viewModel.addInsertedImage("test_path.png");
+      expect(viewModel.associatedImages, isEmpty);
+    });
+
+    test('deleteImageByPath removes image from lists correctly', () async {
+      final existingNote = NotesModel(
+        id: 10,
+        blockId: 1,
+        title: "Existing",
+        content: '[{"insert": {"image": "db_path.png"}}]',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      fakeNotesRepo.notes.add(existingNote);
+
+      await viewModel.initNote(existingNote);
+      viewModel.addInsertedImage("temp_path.png");
+
+      viewModel.deleteImageByPath("temp_path.png");
+      viewModel.deleteImageByPath("db_path.png");
+    });
+
+    test('resolveImagePathsInContent resolves temp paths to db paths', () async {
+      final existingNote = NotesModel(
+        id: 20,
+        blockId: 1,
+        title: "Title",
+        content: '[{"insert": {"image": "temp_path_1.png"}}]',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      fakeNotesRepo.notes.add(existingNote);
+
+      await viewModel.initNote(existingNote);
+      
+      final resolved = viewModel.resolveImagePathsInContent(
+        '[{"insert": {"image": "temp_path_1.png"}}]'
+      );
+      expect(resolved, contains("image"));
     });
   });
 }

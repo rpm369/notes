@@ -15,6 +15,7 @@ class NotesDetailToolbar extends StatelessWidget {
   final VoidCallback onHighlightTap;
   final VoidCallback onFontTap;
   final VoidCallback onReminderTap;
+  final VoidCallback onInsertImageTap;
 
   const NotesDetailToolbar({
     super.key,
@@ -31,6 +32,7 @@ class NotesDetailToolbar extends StatelessWidget {
     required this.onHighlightTap,
     required this.onFontTap,
     required this.onReminderTap,
+    required this.onInsertImageTap,
   });
 
   @override
@@ -72,6 +74,14 @@ class NotesDetailToolbar extends StatelessWidget {
           onPressed: onToggleFormatting,
           icon: const Icon(
             Icons.description_outlined,
+            color: Colors.grey,
+            size: 24,
+          ),
+        ),
+        IconButton(
+          onPressed: onInsertImageTap,
+          icon: const Icon(
+            Icons.image_outlined,
             color: Colors.grey,
             size: 24,
           ),

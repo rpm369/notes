@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:notes/Components/NotesDetail/ReminderCheckDialog.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,7 @@ import 'package:notes/Components/NotesDetail/NotesDetailAppBar.dart';
 import 'package:notes/Components/NotesDetail/NotesDetailToolbar.dart';
 import 'package:notes/Components/NotesDetail/FontSelectionSheet.dart';
 import 'package:notes/Components/NotesDetail/ReminderSetDialog.dart';
+import 'package:image_picker/image_picker.dart';
 
 class NotesDetailView extends StatefulWidget {
   final NotesModel? existingNote;
@@ -49,8 +51,9 @@ class _NotesDetailViewState extends State<NotesDetailView> {
       if (viewModel.currentNote != null) {
         _titleController.text = viewModel.currentNote!.title ?? "";
 
-        final contentStr = viewModel.currentNote!.content ?? "";
+        var contentStr = viewModel.currentNote!.content ?? "";
         if (contentStr.isNotEmpty) {
+          contentStr = viewModel.resolveImagePathsInContent(contentStr);
           try {
             final jsonContent = jsonDecode(contentStr);
             _quillController.document = Document.fromJson(jsonContent);
@@ -94,6 +97,12 @@ class _NotesDetailViewState extends State<NotesDetailView> {
       _isUnderline = selectionStyle.containsKey(Attribute.underline.key);
       _isHighlighted = selectionStyle.containsKey(Attribute.background.key);
     });
+
+    // Sync image list in VM with editor changes
+    final deltaJson = _quillController.document.toDelta().toJson();
+    context.read<NotesDetailViewModel>().syncImagesFromDelta(
+      deltaJson.map((e) => Map<String, dynamic>.from(e)).toList(),
+    );
   }
 
   void _formatBold() {
@@ -178,6 +187,98 @@ class _NotesDetailViewState extends State<NotesDetailView> {
         );
       },
     );
+  }
+
+  Future<void> _insertImage() async {
+    final ImagePicker picker = ImagePicker();
+    
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: const Color(0xFF1E1B1A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                child: Text(
+                  "Select Image Source",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Color(0xFFBE9375)),
+                title: const Text("Gallery", style: TextStyle(color: Colors.white)),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Color(0xFFBE9375)),
+                title: const Text("Camera", style: TextStyle(color: Colors.white)),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (!mounted) return;
+    if (source == null) return;
+
+    final List<XFile> images = [];
+    if (source == ImageSource.gallery) {
+      final List<XFile> pickedImages = await picker.pickMultiImage();
+      if (!mounted) return;
+      if (pickedImages.isNotEmpty) {
+        images.addAll(pickedImages);
+      }
+    } else {
+      final XFile? imageFile = await picker.pickImage(source: ImageSource.camera);
+      if (!mounted) return;
+      if (imageFile != null) {
+        images.add(imageFile);
+      }
+    }
+
+    if (images.isEmpty) return;
+
+    final viewModel = context.read<NotesDetailViewModel>();
+    final List<String> filePaths = images.map((img) => img.path).toList();
+
+    // Batch add to VM
+    viewModel.addInsertedImages(filePaths);
+
+    // Disable editor listener during batch insertion to prevent rebuild crashes
+    _quillController.removeListener(_onEditorStateChanged);
+
+    try {
+      int insertIndex = _quillController.selection.baseOffset;
+      if (insertIndex < 0) insertIndex = 0;
+
+      for (final filePath in filePaths) {
+        _quillController.document.insert(insertIndex, BlockEmbed.image(filePath));
+        _quillController.document.insert(insertIndex + 1, "\n");
+        insertIndex += 2;
+      }
+
+      _quillController.updateSelection(
+        TextSelection.collapsed(offset: insertIndex),
+        ChangeSource.local,
+      );
+    } finally {
+      // Re-enable listener and notify single state change
+      _quillController.addListener(_onEditorStateChanged);
+      _onEditorStateChanged();
+    }
   }
 
   Future<void> _selectReminderTime() async {
@@ -371,8 +472,11 @@ class _NotesDetailViewState extends State<NotesDetailView> {
                   child: QuillEditor.basic(
                     controller: _quillController,
                     focusNode: _editorFocusNode,
-                    config: const QuillEditorConfig(
+                    config: QuillEditorConfig(
                       placeholder: "Start writing...",
+                      embedBuilders: [
+                        NotesImageEmbedBuilder(),
+                      ],
                     ),
                   ),
                 ),
@@ -400,9 +504,69 @@ class _NotesDetailViewState extends State<NotesDetailView> {
               onReminderTap: () => (viewModel.hasReminder
                   ? reviewReminder()
                   : _selectReminderTime()),
+              onInsertImageTap: _insertImage,
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class NotesImageEmbedBuilder extends EmbedBuilder {
+  @override
+  String get key => BlockEmbed.imageType;
+
+  @override
+  bool get expanded => false;
+
+  @override
+  Widget build(
+    BuildContext context,
+    EmbedContext embedContext,
+  ) {
+    final imageUrl = embedContext.node.value.data;
+    if (imageUrl is! String || imageUrl.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    Widget imageWidget;
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      imageWidget = Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => const Icon(
+          Icons.broken_image,
+          color: Colors.redAccent,
+          size: 60,
+        ),
+      );
+    } else {
+      final file = File(imageUrl);
+      if (file.existsSync()) {
+        imageWidget = Image.file(
+          file,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => const Icon(
+            Icons.broken_image,
+            color: Colors.redAccent,
+            size: 60,
+          ),
+        );
+      } else {
+        imageWidget = const Icon(
+          Icons.broken_image,
+          color: Colors.grey,
+          size: 60,
+        );
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: imageWidget,
       ),
     );
   }

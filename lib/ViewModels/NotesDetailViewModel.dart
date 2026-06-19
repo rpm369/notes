@@ -1,21 +1,31 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:notes/Models/BlockModel.dart';
+import 'package:notes/Models/ContentImageModel.dart';
 import 'package:notes/Models/NotesModel.dart';
 import 'package:notes/Services/BlockService.dart';
+import 'package:notes/Services/ImageStorageService.dart';
 import 'package:notes/Services/NotesService.dart';
 
 class NotesDetailViewModel extends ChangeNotifier {
   final NotesService _notesService;
   final BlockService _blockService;
+  final ImageStorageService _imageService;
 
   NotesDetailViewModel({
+    required this._imageService,
     required NotesService notesService,
     required BlockService blockService,
   }) : _notesService = notesService,
        _blockService = blockService;
 
   NotesModel? _currentNote;
+  List<ContentImageModel> _existingImages = [];
+  List<ContentImageModel> _deletedImages = [];
+  List<ContentImageModel> _insertedImages = [];
+
   List<BlockModel> _blocks = [];
+
   bool _isLoading = false;
   bool _reminderChanged = false;
 
@@ -36,6 +46,13 @@ class NotesDetailViewModel extends ChangeNotifier {
         noteId: existingNote.id!,
       );
       _currentNote = fresh ?? existingNote;
+
+      // Load existing images from db
+      _existingImages = await _imageService.imageRepo.getAllImagesFor(
+        noteId: existingNote.id!,
+      );
+      _insertedImages = [];
+      _deletedImages = [];
     } else {
       _currentNote = NotesModel(
         blockId: null,
@@ -44,10 +61,24 @@ class NotesDetailViewModel extends ChangeNotifier {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
+      _existingImages = [];
+      _insertedImages = [];
+      _deletedImages = [];
     }
 
     _reminderChanged = false;
     _isLoading = false;
+    notifyListeners();
+  }
+
+  void addInsertedImages(List<String> imagePaths) {
+    for (final path in imagePaths) {
+      final image = ContentImageModel(
+        imagePath: path,
+        noteId: _currentNote?.id,
+      );
+      _insertedImages.add(image);
+    }
     notifyListeners();
   }
 
@@ -110,7 +141,10 @@ class NotesDetailViewModel extends ChangeNotifier {
           reminder: _currentNote!.reminder,
         );
 
-        final id = await _notesService.createNote(note: newNote, images: []);
+        final id = await _notesService.createNote(
+          note: newNote,
+          images: _insertedImages,
+        );
         _currentNote = NotesModel(
           id: id,
           blockId: newNote.blockId,
@@ -136,16 +170,91 @@ class NotesDetailViewModel extends ChangeNotifier {
         await _notesService.updateNote(
           note: updatedNote,
           updateReminder: _reminderChanged,
-          newImages: [],
-          deletedImages: [],
+          newImages: _insertedImages,
+          deletedImages: _deletedImages,
         );
         _currentNote = updatedNote;
       }
+
+      if (_currentNote!.id != null) {
+        _existingImages = await _imageService.imageRepo.getAllImagesFor(
+          noteId: _currentNote!.id!,
+        );
+        _insertedImages = [];
+        _deletedImages = [];
+      }
+
       _reminderChanged = false;
     } catch (e) {
       debugPrint("Failed to save note: $e");
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  String resolveImagePathsInContent(String contentJsonStr) {
+    if (_existingImages.isEmpty) return contentJsonStr;
+    try {
+      final List<dynamic> deltaJson = jsonDecode(contentJsonStr);
+      int dbImageIndex = 0;
+      for (var operation in deltaJson) {
+        if (operation is Map) {
+          final insert = operation['insert'];
+          if (insert is Map && insert.containsKey('image')) {
+            if (dbImageIndex < _existingImages.length) {
+              insert['image'] = _existingImages[dbImageIndex].imagePath;
+              dbImageIndex++;
+            }
+          }
+        }
+      }
+      return jsonEncode(deltaJson);
+    } catch (e) {
+      return contentJsonStr;
+    }
+  }
+
+  void syncImagesFromDelta(List<Map<String, dynamic>> deltaJson) {
+    final List<String> currentImagePaths = [];
+    for (var operation in deltaJson) {
+      final insert = operation['insert'];
+      if (insert is Map && insert.containsKey('image')) {
+        final imagePath = insert['image'];
+        if (imagePath is String) {
+          currentImagePaths.add(imagePath);
+        }
+      }
+    }
+
+    bool changed = false;
+
+    // Identify deleted images from existingImages
+    final List<ContentImageModel> newlyDeleted = [];
+    for (var img in _existingImages) {
+      if (!currentImagePaths.contains(img.imagePath)) {
+        newlyDeleted.add(img);
+      }
+    }
+
+    if (newlyDeleted.isNotEmpty) {
+      for (var img in newlyDeleted) {
+        _existingImages.remove(img);
+        _deletedImages.add(img);
+      }
+      changed = true;
+    }
+
+    // Identify deleted images from insertedImages
+    final initialInsertedCount = _insertedImages.length;
+    _insertedImages.removeWhere(
+      (img) => !currentImagePaths.contains(img.imagePath),
+    );
+    if (_insertedImages.length != initialInsertedCount) {
+      changed = true;
+    }
+
+    if (changed) {
       notifyListeners();
     }
   }

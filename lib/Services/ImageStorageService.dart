@@ -22,6 +22,12 @@ class ImageStorageService {
     }
   }
 
+  Future<List<ContentImageModel>> getAllImagesForNote({
+    required int noteId,
+  }) async {
+    return await imageRepo.getAllImagesFor(noteId: noteId);
+  }
+
   Future<void> deleteImage({required ContentImageModel image}) async {
     await deleteImageFromDisk(imagePath: image.imagePath);
     await imageRepo.deleteImage(id: image.id!);
