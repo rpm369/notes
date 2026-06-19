@@ -258,4 +258,36 @@ class NotesDetailViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  List<ContentImageModel> get associatedImages => _existingImages;
+  List<ContentImageModel> get insertedImages => _insertedImages;
+  List<ContentImageModel> get deletedImages => _deletedImages;
+
+  void addInsertedImage(String imagePath) {
+    addInsertedImages([imagePath]);
+  }
+
+  void deleteImage(ContentImageModel image) {
+    deleteImageByPath(image.imagePath);
+  }
+
+  void deleteImageByPath(String imagePath) {
+    final existingIndex = _existingImages.indexWhere(
+      (img) => img.imagePath == imagePath,
+    );
+    if (existingIndex != -1) {
+      final img = _existingImages.removeAt(existingIndex);
+      _deletedImages.add(img);
+      notifyListeners();
+      return;
+    }
+
+    final insertedIndex = _insertedImages.indexWhere(
+      (img) => img.imagePath == imagePath,
+    );
+    if (insertedIndex != -1) {
+      _insertedImages.removeAt(insertedIndex);
+      notifyListeners();
+    }
+  }
 }

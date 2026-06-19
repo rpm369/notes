@@ -8,6 +8,7 @@ import 'package:notes/ViewModels/NotesPageViewModel.dart';
 import 'package:notes/Models/BlockModel.dart';
 import 'package:notes/Screens/TrashView.dart';
 import 'package:notes/Screens/NotesDetailView.dart';
+import 'package:notes/Screens/RemindersScreen.dart';
 
 // Import modular subcomponents
 import 'package:notes/Components/NotesPageComponents/NotesAppBar.dart';
@@ -116,6 +117,15 @@ class _NotesPageViewState extends State<NotesPageView> {
                       context,
                       CupertinoPageRoute(
                         builder: (context) => const TrashView(),
+                      ),
+                    );
+                    await viewModel.loadData();
+                  },
+                  onTimerPressed: () async {
+                    await Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                        builder: (context) => const RemindersScreen(),
                       ),
                     );
                     await viewModel.loadData();

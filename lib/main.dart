@@ -63,10 +63,7 @@ void main() async {
           ),
         ),
         ChangeNotifierProvider(
-          create: (_) => RemindersScreenViewModel(
-            notesService: notesService,
-            reminderService: reminderService,
-          ),
+          create: (_) => RemindersScreenViewModel(notesService: notesService),
         ),
         ChangeNotifierProvider(
           create: (_) => ToDoListPageViewModel(

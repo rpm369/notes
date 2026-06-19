@@ -1,7 +1,5 @@
 // ignore_for_file: deprecated_member_use
 
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:notes/Models/NotesModel.dart';
 
@@ -23,13 +21,6 @@ class NoteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String? content;
-    try {
-      content = jsonDecode(note.content ?? "");
-    } catch (e) {
-      content = note.content;
-    }
-
     return GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
@@ -75,7 +66,7 @@ class NoteCard extends StatelessWidget {
             const SizedBox(height: 8),
             Expanded(
               child: Text(
-                content ?? "No Content",
+                note.content ?? "Nothing",
                 style: TextStyle(
                   color: Colors.grey.shade400,
                   fontSize: 13,

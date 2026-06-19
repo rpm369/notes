@@ -191,7 +191,7 @@ class _NotesDetailViewState extends State<NotesDetailView> {
 
   Future<void> _insertImage() async {
     final ImagePicker picker = ImagePicker();
-    
+
     final ImageSource? source = await showModalBottomSheet<ImageSource>(
       context: context,
       backgroundColor: const Color(0xFF1E1B1A),
@@ -215,13 +215,22 @@ class _NotesDetailViewState extends State<NotesDetailView> {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library, color: Color(0xFFBE9375)),
-                title: const Text("Gallery", style: TextStyle(color: Colors.white)),
+                leading: const Icon(
+                  Icons.photo_library,
+                  color: Color(0xFFBE9375),
+                ),
+                title: const Text(
+                  "Gallery",
+                  style: TextStyle(color: Colors.white),
+                ),
                 onTap: () => Navigator.pop(context, ImageSource.gallery),
               ),
               ListTile(
                 leading: const Icon(Icons.camera_alt, color: Color(0xFFBE9375)),
-                title: const Text("Camera", style: TextStyle(color: Colors.white)),
+                title: const Text(
+                  "Camera",
+                  style: TextStyle(color: Colors.white),
+                ),
                 onTap: () => Navigator.pop(context, ImageSource.camera),
               ),
               const SizedBox(height: 12),
@@ -242,7 +251,9 @@ class _NotesDetailViewState extends State<NotesDetailView> {
         images.addAll(pickedImages);
       }
     } else {
-      final XFile? imageFile = await picker.pickImage(source: ImageSource.camera);
+      final XFile? imageFile = await picker.pickImage(
+        source: ImageSource.camera,
+      );
       if (!mounted) return;
       if (imageFile != null) {
         images.add(imageFile);
@@ -265,7 +276,10 @@ class _NotesDetailViewState extends State<NotesDetailView> {
       if (insertIndex < 0) insertIndex = 0;
 
       for (final filePath in filePaths) {
-        _quillController.document.insert(insertIndex, BlockEmbed.image(filePath));
+        _quillController.document.insert(
+          insertIndex,
+          BlockEmbed.image(filePath),
+        );
         _quillController.document.insert(insertIndex + 1, "\n");
         insertIndex += 2;
       }
@@ -342,6 +356,16 @@ class _NotesDetailViewState extends State<NotesDetailView> {
       pickedTime.hour,
       pickedTime.minute,
     );
+
+    if (reminderDateTime.isBefore(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Select the Valid Date and Time"),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
 
     if (!mounted) return;
     showDialog(
@@ -474,9 +498,7 @@ class _NotesDetailViewState extends State<NotesDetailView> {
                     focusNode: _editorFocusNode,
                     config: QuillEditorConfig(
                       placeholder: "Start writing...",
-                      embedBuilders: [
-                        NotesImageEmbedBuilder(),
-                      ],
+                      embedBuilders: [NotesImageEmbedBuilder()],
                     ),
                   ),
                 ),
@@ -521,10 +543,7 @@ class NotesImageEmbedBuilder extends EmbedBuilder {
   bool get expanded => false;
 
   @override
-  Widget build(
-    BuildContext context,
-    EmbedContext embedContext,
-  ) {
+  Widget build(BuildContext context, EmbedContext embedContext) {
     final imageUrl = embedContext.node.value.data;
     if (imageUrl is! String || imageUrl.isEmpty) {
       return const SizedBox.shrink();
@@ -535,11 +554,8 @@ class NotesImageEmbedBuilder extends EmbedBuilder {
       imageWidget = Image.network(
         imageUrl,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => const Icon(
-          Icons.broken_image,
-          color: Colors.redAccent,
-          size: 60,
-        ),
+        errorBuilder: (context, error, stackTrace) =>
+            const Icon(Icons.broken_image, color: Colors.redAccent, size: 60),
       );
     } else {
       final file = File(imageUrl);
@@ -547,11 +563,8 @@ class NotesImageEmbedBuilder extends EmbedBuilder {
         imageWidget = Image.file(
           file,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => const Icon(
-            Icons.broken_image,
-            color: Colors.redAccent,
-            size: 60,
-          ),
+          errorBuilder: (context, error, stackTrace) =>
+              const Icon(Icons.broken_image, color: Colors.redAccent, size: 60),
         );
       } else {
         imageWidget = const Icon(

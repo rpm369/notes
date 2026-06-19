@@ -5,15 +5,13 @@ import 'package:notes/Services/ReminderService.dart';
 
 class RemindersScreenViewModel extends ChangeNotifier {
   final NotesService _notesService;
-  final ReminderService _reminderService;
-  RemindersScreenViewModel({
-    required this._notesService,
-    required this._reminderService,
-  });
+  RemindersScreenViewModel({required this._notesService});
 
   bool isLoading = false;
   String errorMessage = '';
-  List<NotesModel> reminderNotes = [];
+  List<NotesModel> _reminderNotes = [];
+
+  List<NotesModel> get reminderNotes => _reminderNotes;
 
   // Initial Data loading
   Future<void> loadData() async {
@@ -21,7 +19,7 @@ class RemindersScreenViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      reminderNotes = await _notesService.getReminderNotes();
+      _reminderNotes = await _notesService.getReminderNotes();
     } catch (e) {
       errorMessage = e.toString();
     }
@@ -30,10 +28,20 @@ class RemindersScreenViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  int get totalReminderCount => reminderNotes.length;
+  int get totalReminderCount => _reminderNotes.length;
 
-  Future<void> cancelReminder({required int notesId}) async {
-    await _reminderService.cancelReminder(noteId: notesId);
+  Future<void> cancelReminder({required NotesModel note}) async {
+    await _notesService.updateNote(
+      note: note.copyWith(
+        blockId: note.blockId,
+        deletedAt: note.deletedAt,
+        reminder: null,
+      ),
+      updateReminder: true,
+      newImages: [],
+      deletedImages: [],
+    );
+
     await loadData();
   }
 }

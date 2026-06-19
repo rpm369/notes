@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 
 class NotesAppBar extends StatelessWidget {
   final VoidCallback onTrashPressed;
+  final VoidCallback onTimerPressed;
 
-  const NotesAppBar({super.key, required this.onTrashPressed});
+  const NotesAppBar({
+    super.key,
+    required this.onTrashPressed,
+    required this.onTimerPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +37,9 @@ class NotesAppBar extends StatelessWidget {
                   size: 25,
                 ),
               ),
-              const IconButton(
-                onPressed: null,
-                icon: Icon(
+              IconButton(
+                onPressed: onTimerPressed,
+                icon: const Icon(
                   Icons.schedule_rounded,
                   color: Colors.white,
                   size: 25,
