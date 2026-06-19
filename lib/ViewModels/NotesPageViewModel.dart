@@ -36,12 +36,6 @@ class NotesPageViewModel extends ChangeNotifier {
     try {
       _blocks = await blockService.getAllBlocks();
 
-      // Seed initial dummy data if database is empty to match the user's mockup.
-      if (_blocks.isEmpty) {
-        await _seedInitialData();
-        _blocks = await blockService.getAllBlocks();
-      }
-
       _notesByBlock.clear();
 
       for (BlockModel block in _blocks) {
@@ -174,74 +168,5 @@ class NotesPageViewModel extends ChangeNotifier {
   }) async {
     await notesService.moveNotesToBlock(noteIds: noteIds, blockId: blockId);
     await loadData();
-  }
-
-  // Seed Initial Dummy Data to Match Cloned UI Mockup
-  Future<void> _seedInitialData() async {
-    try {
-      // Direct insertion using blockService
-      await blockService.createBlock(block: const BlockModel(title: "BALLET"));
-      await blockService.createBlock(block: const BlockModel(title: "IDEAS"));
-
-      final dbBlocks = await blockService.getAllBlocks();
-      final balletBlock = dbBlocks.firstWhere(
-        (b) => b.title == "BALLET",
-        orElse: () => dbBlocks.first,
-      );
-      final ideasBlock = dbBlocks.firstWhere(
-        (b) => b.title == "IDEAS",
-        orElse: () => dbBlocks.first,
-      );
-
-      // Notes in BALLET block
-      final note1 = NotesModel(
-        blockId: balletBlock.id!,
-        title: "sample",
-        content: "[Photo]This is a content in different font...",
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      await notesService.createNote(note: note1, images: []);
-
-      // Notes in IDEAS block
-      final note2 = NotesModel(
-        blockId: ideasBlock.id!,
-        title: "hopper",
-        content: "Kinetic",
-        createdAt: DateTime(2026, 6, 8, 10, 0),
-        updatedAt: DateTime(2026, 6, 8, 10, 0),
-      );
-      await notesService.createNote(note: note2, images: []);
-
-      final note3 = NotesModel(
-        blockId: ideasBlock.id!,
-        title: "Shopping List",
-        content: "SHOPPING LIST\n...",
-        createdAt: DateTime.now().subtract(const Duration(minutes: 8)),
-        updatedAt: DateTime.now().subtract(const Duration(minutes: 8)),
-      );
-      await notesService.createNote(note: note3, images: []);
-
-      final note4 = NotesModel(
-        blockId: ideasBlock.id!,
-        title: "Fanta",
-        content: "Soda recipe and branding ideas",
-        createdAt: DateTime.now().subtract(const Duration(minutes: 7)),
-        updatedAt: DateTime.now().subtract(const Duration(minutes: 7)),
-      );
-      await notesService.createNote(note: note4, images: []);
-
-      // Note in OTHERS block (null blockId)
-      final noteOthers = NotesModel(
-        blockId: null,
-        title: "Uncategorized Item",
-        content: "This note has no block association and belongs to OTHERS.",
-        createdAt: DateTime.now().subtract(const Duration(minutes: 15)),
-        updatedAt: DateTime.now().subtract(const Duration(minutes: 15)),
-      );
-      await notesService.createNote(note: noteOthers, images: []);
-    } catch (e) {
-      print("Seeding failed: $e");
-    }
   }
 }

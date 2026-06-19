@@ -15,9 +15,6 @@ class NotificationCenter {
       ),
     ]);
 
-    if (!(await AwesomeNotifications().isNotificationAllowed()))
-      await AwesomeNotifications().requestPermissionToSendNotifications();
-
     await AwesomeNotifications().setListeners(
       onActionReceivedMethod: (action) async {
         await AwesomeNotifications().resetGlobalBadge();
@@ -67,23 +64,27 @@ class NotificationCenter {
     required String body,
     required DateTime scheduledDateTime,
   }) async {
-    await AwesomeNotifications().createNotification(
-      content: NotificationContent(
-        id: id,
-        channelKey: 'notesReminder',
-        title: title,
-        body: body,
-      ),
-      schedule: NotificationCalendar(
-        year: scheduledDateTime.year,
-        month: scheduledDateTime.month,
-        day: scheduledDateTime.day,
-        hour: scheduledDateTime.hour,
-        minute: scheduledDateTime.minute,
-        second: 0,
-        millisecond: 0,
-      ),
-    );
+    try {
+      await AwesomeNotifications().createNotification(
+        content: NotificationContent(
+          id: id,
+          channelKey: 'notesReminder',
+          title: title,
+          body: body,
+        ),
+        schedule: NotificationCalendar(
+          year: scheduledDateTime.year,
+          month: scheduledDateTime.month,
+          day: scheduledDateTime.day,
+          hour: scheduledDateTime.hour,
+          minute: scheduledDateTime.minute,
+          second: 0,
+          millisecond: 0,
+        ),
+      );
+    } catch (e) {
+      await AwesomeNotifications().requestPermissionToSendNotifications();
+    }
   }
 
   static Future<void> cancelNotificaion({required int id}) async {

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:notes/ViewModels/NotesPageViewModel.dart';
 import 'package:notes/Models/BlockModel.dart';
 import 'package:notes/Screens/TrashView.dart';
+import 'package:notes/Screens/NotesDetailView.dart';
 
 // Import modular subcomponents
 import 'package:notes/Components/NotesPageComponents/NotesAppBar.dart';
@@ -233,9 +234,19 @@ class _NotesPageViewState extends State<NotesPageView> {
                       note: note,
                       formattedDate: _formatNoteDate(note.updatedAt),
                       isSelected: isSelected,
-                      onTap: () {
+                      onTap: () async {
                         if (_isSelectionMode) {
                           _toggleSelection(note.id!);
+                        } else {
+                          final result = await Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (context) => NotesDetailView(existingNote: note),
+                            ),
+                          );
+                          if (result == true) {
+                            viewModel.loadData();
+                          }
                         }
                       },
                       onLongPress: () {

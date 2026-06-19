@@ -6,6 +6,8 @@ import 'package:notes/Components/BottomNavBar.dart';
 import 'package:notes/Components/ToDoListPage/NewToDoListSheet.dart';
 import 'package:notes/ViewModels/NotesPageViewModel.dart';
 import 'package:notes/ViewModels/ToDoListPageViewModel.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:notes/Screens/NotesDetailView.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -88,6 +90,55 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _showNotesAddOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF282321),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.note_add, color: Color(0xFFBE9375)),
+                title: const Text(
+                  "New Note",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  final result = await Navigator.push(
+                    context,
+                    CupertinoPageRoute(
+                      builder: (context) => const NotesDetailView(),
+                    ),
+                  );
+                  if (result == true && mounted) {
+                    context.read<NotesPageViewModel>().loadData();
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.create_new_folder, color: Color(0xFFBE9375)),
+                title: const Text(
+                  "New Block",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _showCreateBlockDialog(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             onTapAdd: () {
               if (_currentIndex == 0) {
-                _showCreateBlockDialog(context);
+                _showNotesAddOptions(context);
               } else {
                 _showCreateToDoListSheet(context);
               }

@@ -11,10 +11,12 @@ import 'package:notes/Services/NotesService.dart';
 import 'package:notes/Services/ReminderService.dart';
 import 'package:notes/Services/ToDoListService.dart';
 import 'package:notes/Services/ToDoService.dart';
+import 'package:notes/Utils/NotificationCenter.dart';
 import 'package:notes/ViewModels/NotesPageViewModel.dart';
 import 'package:notes/ViewModels/RemindersScreenViewModel.dart';
 import 'package:notes/ViewModels/ToDoListPageViewModel.dart';
 import 'package:notes/ViewModels/TrashScreenViewModel.dart';
+import 'package:notes/ViewModels/NotesDetailViewModel.dart';
 import 'package:provider/provider.dart';
 import 'package:notes/Screens/HomeScreen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -23,6 +25,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
+
+  await NotificationCenter.initializeChannels();
 
   final db = await SqlDatabaseProvider.getDatabase();
 
@@ -72,6 +76,12 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => TrashScreenViewModel(notesService: notesService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => NotesDetailViewModel(
+            notesService: notesService,
+            blockService: blockService,
+          ),
         ),
       ],
       child: MyApp(),

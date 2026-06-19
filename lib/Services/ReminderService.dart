@@ -3,7 +3,9 @@ import 'package:notes/Utils/NotificationCenter.dart';
 
 class ReminderService {
   Future<void> scheduleReminder({required NotesModel note}) async {
-    if (await NotificationCenter.isAlreadyScheduled(key: note.id!)) return;
+    if (await NotificationCenter.isAlreadyScheduled(key: note.id!)) {
+      await cancelReminder(noteId: note.id!);
+    }
 
     await NotificationCenter.sheduleNotification(
       id: note.id!,
