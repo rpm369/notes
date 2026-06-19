@@ -3,6 +3,7 @@ import 'package:notes/Models/BlockModel.dart';
 import 'package:notes/Models/NotesModel.dart';
 import 'package:notes/Services/BlockService.dart';
 import 'package:notes/Services/NotesService.dart';
+import 'package:notes/Utils/DeltaParser.dart';
 
 class NotesPageViewModel extends ChangeNotifier {
   late NotesService notesService;
@@ -99,8 +100,9 @@ class NotesPageViewModel extends ChangeNotifier {
 
       for (NotesModel note in entry.value) {
         if (note.title == null && note.content == null) continue;
+        final cleanContent = DeltaParser.parseToPlainText(note.content).toLowerCase();
         if ((note.title?.toLowerCase().contains(query) ?? false) ||
-            (note.content?.toLowerCase().contains(query) ?? false))
+            cleanContent.contains(query))
           tempNotesByBlock[entry.key]!.add(note);
       }
 

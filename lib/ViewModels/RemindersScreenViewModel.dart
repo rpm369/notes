@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:notes/Models/NotesModel.dart';
 import 'package:notes/Services/NotesService.dart';
-import 'package:notes/Services/ReminderService.dart';
 
 class RemindersScreenViewModel extends ChangeNotifier {
   final NotesService _notesService;

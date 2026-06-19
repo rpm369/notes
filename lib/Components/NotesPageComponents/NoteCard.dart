@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:notes/Models/NotesModel.dart';
+import 'package:notes/Utils/DeltaParser.dart';
 
 class NoteCard extends StatelessWidget {
   final NotesModel note;
@@ -66,7 +67,9 @@ class NoteCard extends StatelessWidget {
             const SizedBox(height: 8),
             Expanded(
               child: Text(
-                note.content ?? "Nothing",
+                note.content != null && note.content!.isNotEmpty
+                    ? DeltaParser.parseToPlainText(note.content)
+                    : "Nothing",
                 style: TextStyle(
                   color: Colors.grey.shade400,
                   fontSize: 13,

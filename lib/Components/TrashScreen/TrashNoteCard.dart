@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:notes/Models/NotesModel.dart';
+import 'package:notes/Utils/DeltaParser.dart';
 
 class TrashNoteCard extends StatelessWidget {
   final NotesModel note;
@@ -49,7 +50,7 @@ class TrashNoteCard extends StatelessWidget {
           // Content
           if (note.content != null && note.content!.isNotEmpty) ...[
             Text(
-              note.content!,
+              DeltaParser.parseToPlainText(note.content),
               style: const TextStyle(
                 color: Colors.grey,
                 fontSize: 14,

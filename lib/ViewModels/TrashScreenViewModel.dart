@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:notes/Models/NotesModel.dart';
 import 'package:notes/Services/NotesService.dart';
+import 'package:notes/Utils/DeltaParser.dart';
 
 class TrashScreenViewModel extends ChangeNotifier {
   final NotesService _notesService;
@@ -46,8 +47,11 @@ class TrashScreenViewModel extends ChangeNotifier {
       if ((note.title?.isEmpty ?? false) && (note.content?.isEmpty ?? false))
         continue;
 
+      final cleanContent = DeltaParser.parseToPlainText(
+        note.content,
+      ).toLowerCase();
       if ((note.title?.toLowerCase().contains(query) ?? false) ||
-          (note.content?.toLowerCase().contains(query) ?? false)) {
+          cleanContent.contains(query)) {
         tempNotesList.add(note);
       }
     }
